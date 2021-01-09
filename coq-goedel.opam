@@ -20,7 +20,7 @@ build: ["dune" "build" "-p" name "-j" jobs]
 depends: [
   "dune" {>= "2.5"}
   "coq" {(>= "8.7" & < "8.14~") | (= "dev")}
-  "coq-ackermann" {= version}
+  "coq-hydra-battles" {= "dev"}
   "coq-pocklington" {= "dev"}
 ]
 
