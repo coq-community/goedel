@@ -34,7 +34,7 @@ without induction) that is complete is inconsistent.
 - Coq-community maintainer(s):
   - Pierre Castéran ([**@Casteran**](https://github.com/Casteran))
 - License: [MIT License](LICENSE)
-- Compatible Coq versions: 8.7 or later
+- Compatible Coq versions: 8.11 or later
 - Additional dependencies:
   - [Hydra Battles](https://github.com/coq-community/hydra-battles)
   - [Pocklington](https://github.com/coq-community/pocklington)
