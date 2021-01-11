@@ -34,9 +34,9 @@ without induction) that is complete is inconsistent.
 - Coq-community maintainer(s):
   - Pierre Castéran ([**@Casteran**](https://github.com/Casteran))
 - License: [MIT License](LICENSE)
-- Compatible Coq versions: 8.7 or later
+- Compatible Coq versions: 8.11 or later
 - Additional dependencies:
-  - Ackermann (primitive recursive functions library that is part of this repository)
+  - [Hydra Battles](https://github.com/coq-community/hydra-battles)
   - [Pocklington](https://github.com/coq-community/pocklington)
 - Coq namespace: `Goedel`
 - Related publication(s):
@@ -65,10 +65,3 @@ make install
 ## Documentation
 
 More information about the project can be found at [this website](http://r6.ca/goedel1.html).
-
-
-## Projects
-
- The directory theories/Ackermann contains two (not solved yet) exercises about primitive recursive functions:
- theories\_Ackermann\_Fibonacci\_project.v and theories\_Ackermann\_Ackermann_project.v.
- Please contribute!

@@ -1,24 +1,24 @@
 From Coq Require Import Ensembles.
 From Coq Require Import Lists.List.
-From Ackermann Require Import checkPrf.
-From Ackermann Require Import code.
-From Ackermann Require Import Languages.
-From Ackermann Require Import folProp.
-From Ackermann Require Import folProof.
-From Ackermann Require Import folLogic3.
-From Ackermann Require Import folReplace.
+From hydras.Ackermann Require Import checkPrf.
+From hydras.Ackermann Require Import code.
+From hydras.Ackermann Require Import Languages.
+From hydras.Ackermann Require Import folProp.
+From hydras.Ackermann Require Import folProof.
+From hydras.Ackermann Require Import folLogic3.
+From hydras.Ackermann Require Import folReplace.
 Require Import PRrepresentable.
-From Ackermann Require Import expressible.
-From Ackermann Require Import primRec.
+From hydras.Ackermann Require Import expressible.
+From hydras.Ackermann Require Import primRec.
 From Coq Require Import Arith.
-From Ackermann Require Import PA.
-From Ackermann Require Import NNtheory.
-From Ackermann Require Import codeList.
-From Ackermann Require Import subProp.
-From Ackermann Require Import ListExt.
-From Ackermann Require Import cPair.
-From Ackermann Require Import wellFormed.
-From Ackermann Require Import prLogic.
+From hydras.Ackermann Require Import PA.
+From hydras.Ackermann Require Import NNtheory.
+From hydras.Ackermann Require Import codeList.
+From hydras.Ackermann Require Import subProp.
+From hydras.Ackermann Require Import ListExt.
+From hydras.Ackermann Require Import cPair.
+From hydras.Ackermann Require Import wellFormed.
+From hydras.Ackermann Require Import prLogic.
 
 Ltac SimplFreeVar :=
   repeat
