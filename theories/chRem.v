@@ -1,3 +1,5 @@
+Set Apply With Renaming.
+
 From Coq Require Import Arith.
 From Coq Require Import Wf_nat.
 From Coq Require Import ZArith.

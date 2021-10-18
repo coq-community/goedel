@@ -1,3 +1,5 @@
+Set Apply With Renaming.
+
 From Coq Require Import Ensembles.
 From Coq Require Import Lists.List.
 From hydras.Ackermann Require Import checkPrf.
