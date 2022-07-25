@@ -17,6 +17,7 @@ From Coq Require Vector.
 From hydras.Ackermann Require Import ListExt.
 From hydras.Ackermann Require Import cPair.
 From Coq Require Import Decidable.
+Require Import Lia.
 
 Section Primative_Recursive_Representable.
 
@@ -1226,12 +1227,8 @@ apply (subFormulaNil LNN).
 simpl in |- *.
 unfold not in |- *; intros.
 decompose sum H.
-discriminate H0.
-inversion H1.
-elim (lt_irrefl n).
-rewrite H2 in l.
-auto.
-auto.
+lia.
+auto. 
 Qed.
 
 Let composeSigmaFormula (n w m : nat) (A : Vector.t (Formula * naryFunc n) m)
