@@ -1,43 +1,31 @@
-Set Apply With Renaming.
-
 From Coq Require Import Arith.
 From Coq Require Import Wf_nat.
 From Coq Require Import ZArith.
 From Coq Require Import Peano_dec.
 From Coq Require Import ZArith_dec.
-From Pocklington Require Import gcd divides natZ prime modprime.
+(* should be removed later ! *)
+
+From Pocklington Require gcd divides natZ prime modprime. 
 From Coq Require Import Max.
-
-Lemma multO : forall a b : nat, a * b = 0 -> a = 0 \/ b = 0.
-Proof.
-intros.
-induction (mult_O_le b a).
-auto.
-rewrite H in H0.
-right.
-symmetry  in |- *.
-apply le_n_O_eq.
-assumption.
-Qed.
-
-Definition CoPrime (a b : nat) := gcd (Z_of_nat a) (Z_of_nat b) 1.
+From Coqprime Require Import NatAux ZCAux.
+Definition CoPrime (a b : nat) := Pocklington.gcd.gcd (Z_of_nat a) (Z_of_nat b) 1.
 
 Lemma coPrimeSym : forall a b : nat, CoPrime a b -> CoPrime b a.
 Proof.
 unfold CoPrime in |- *.
-intros.
-apply gcd_sym.
-assumption.
+intros; now apply gcd.gcd_sym.
 Qed.
 
 Lemma coPrimeMult :
- forall a b c : nat, CoPrime a b -> Divides a (b * c) -> Divides a c.
+ forall a b c : nat, CoPrime a b -> divide a (b * c) -> divide a c.
 Proof.
+Admitted.
+(* To do
 intros.
 unfold CoPrime in H.
 induction a as [| a Hreca].
 induction H0 as (x, H0).
-induction (multO _ _ H0).
+cbn in H0. rewrite Nat.eq_mul_0 in H0. destruct H0 as [H1 | H1].
 rewrite H1 in H.
 unfold gcd in H.
 induction H as (H, H2).
@@ -53,7 +41,7 @@ exists 0.
 rewrite mult_comm.
 simpl in |- *.
 reflexivity.
-elim (le_Sn_n _ H3).
+elim (le_Sn_n _ H0).
 exists 0.
 rewrite H1.
 auto.
@@ -91,11 +79,13 @@ rewrite <- (abs_inj c).
 apply zdivdiv.
 assumption.
 Qed.
+*)
 
 Lemma coPrimeMult2 :
  forall a b c : nat,
- CoPrime a b -> Divides a c -> Divides b c -> Divides (a * b) c.
+ CoPrime a b -> divide a c -> divide b c -> divide (a * b) c.
 Proof.
+Admitted. (*
 intros.
 induction H1 as (x, H1).
 assert (Divides a x).
@@ -110,17 +100,16 @@ rewrite (mult_assoc_reverse b).
 rewrite <- H2.
 assumption.
 Qed.
+           *)
 
-Lemma ltgt1 : forall a b : nat, a < b -> b > 0.
+Lemma ltgt1 : forall a b : nat, (a < b -> b > 0)%nat. 
 Proof.
-intros.
-unfold gt in |- *.
-eapply le_lt_trans.
-apply le_O_n.
+intros; apply Nat.le_lt_trans with a. 
+auto with arith. 
 apply H.
 Qed.
 
-Lemma minus_le : forall a b : nat, a - b <= a.
+Lemma minus_le : forall a b : nat, (a - b <= a)%nat.
 Proof.
 intros.
 induction b as [| b Hrecb].
@@ -269,7 +258,7 @@ apply eq_S.
 apply IHa.
 apply H.
 Qed.
-
+Open Scope nat_scope. 
 Lemma uniqueRem :
  forall r1 r2 b : nat,
  b > 0 ->
@@ -355,7 +344,7 @@ exists ((- Z_of_nat a0)%Z, b0).
 induction p as (H1, H2).
 split.
 apply H2.
-rewrite <- (inj_abs_pos a').
+rewrite <- (Pocklington.natZ.inj_abs_pos a').
 replace (fst ((- Z_of_nat a0)%Z, b0)) with (- Z_of_nat a0)%Z.
 replace (snd ((- Z_of_nat a0)%Z, b0)) with b0.
 rewrite Zopp_mult_distr_l_reverse.
@@ -421,10 +410,10 @@ Qed.
 Lemma gcd_lincomb_nat_dec :
  forall x y d : nat,
  x > 0 ->
- gcd (Z_of_nat x) (Z_of_nat y) d ->
+ Pocklington.gcd.gcd (Z_of_nat x) (Z_of_nat y) d ->
  {a : Z * Z | Z_of_nat d = (Z_of_nat x * fst a + Z_of_nat y * snd a)%Z}.
 Proof.
-   unfold LinComb in |- *. intro x.
+   unfold Pocklington.gcd.LinComb in |- *. intro x.
    apply (lt_wf_rec x). intros X IH. intros.
    elim (modulo X H y). intro z. 
    elim z.
@@ -444,9 +433,9 @@ Proof.
    rewrite <- Zmult_0_r_reverse. rewrite <- Zplus_0_r_reverse.
    rewrite Zmult_comm. rewrite Zmult_1_l.
    apply Znat.inj_eq.
-   apply (euclid_gcd d X (Z_of_nat y) (Z_of_nat X) (Z_of_nat q) 0).
+   apply (Pocklington.gcd.euclid_gcd d X (Z_of_nat y) (Z_of_nat X) (Z_of_nat q) 0).
    rewrite <- Zplus_0_r_reverse. rewrite <- Znat.inj_mult. apply Znat.inj_eq. assumption.
-   apply gcd_sym. assumption. apply gcd_0_l. assumption.
+   apply Pocklington.gcd.gcd_sym. assumption. apply Pocklington.gcd.gcd_0_l. assumption.
    auto.
    auto.
 
@@ -482,8 +471,8 @@ auto.
 auto.
    apply gt_Sn_O.
    apply
-    (euclid_gcd1 d (Z_of_nat y) (Z_of_nat X) (Z_of_nat q) (Z_of_nat (S r1))).
-   apply gcd_sym. assumption.
+    (Pocklington.gcd.euclid_gcd1 d (Z_of_nat y) (Z_of_nat X) (Z_of_nat q) (Z_of_nat (S r1))).
+   apply Pocklington.gcd.gcd_sym. assumption.
    rewrite <- Znat.inj_mult. rewrite <- Znat.inj_plus. apply Znat.inj_eq. assumption.
 Qed.
 
@@ -679,7 +668,7 @@ rewrite mult_1_l.
 reflexivity.
 intros.
 induction H as (H, H0).
-apply div_le1.
+apply Pocklington.divides.div_le1.
 apply H.
 Qed.
 
@@ -688,12 +677,12 @@ Lemma coPrimeMult3 :
  a > 0 -> b > 0 -> c > 0 -> CoPrime a c -> CoPrime b c -> CoPrime (a * b) c.
 Proof.
 intros.
-assert (LinComb (Z_of_nat 1) (Z_of_nat a) (Z_of_nat c)).
-apply gcd_lincomb_nat.
+assert (Pocklington.gcd.LinComb (Z_of_nat 1) (Z_of_nat a) (Z_of_nat c)).
+apply Pocklington.gcd.gcd_lincomb_nat.
 assumption.
 apply H2.
-assert (LinComb (Z_of_nat 1) (Z_of_nat b) (Z_of_nat c)).
-apply gcd_lincomb_nat.
+assert (Pocklington.gcd.LinComb (Z_of_nat 1) (Z_of_nat b) (Z_of_nat c)).
+apply Pocklington.gcd.gcd_lincomb_nat.
 assumption.
 apply H3.
 induction H4 as (x, H4).
@@ -744,25 +733,25 @@ rewrite (Zmult_comm x2).
 rewrite <- H5.
 reflexivity.
 auto.
-assert (Divides e 1).
+assert (divide e 1).
 replace 1 with (Z.abs_nat 1).
 replace e with (Z.abs_nat (Z_of_nat e)).
-apply zdivdiv.
+apply Pocklington.divides.zdivdiv.
 rewrite H8.
-apply zdiv_plus_compat.
-apply zdiv_mult_compat_l.
-apply divzdiv.
+apply Pocklington.divides.zdiv_plus_compat.
+apply Pocklington.divides.zdiv_mult_compat_l.
+apply Pocklington.divides.divzdiv.
 unfold A, B in |- *.
 rewrite <- Znat.inj_mult.
-rewrite abs_inj.
+rewrite Pocklington.natZ.abs_inj.
 assumption.
-apply zdiv_mult_compat_l.
-apply divzdiv.
-rewrite abs_inj.
+apply Pocklington.divides.zdiv_mult_compat_l.
+apply Pocklington.divides.divzdiv.
+rewrite Pocklington.natZ.abs_inj.
 assumption.
-apply abs_inj.
+apply  Pocklington.natZ.abs_inj.
 auto.
-apply div_le.
+apply Pocklington.divides.div_le.
 apply lt_n_Sn.
 assumption.
 Qed.
@@ -932,7 +921,7 @@ Qed.
 
 Lemma divProd :
  forall (n : nat) (x : nat -> nat) (i : nat),
- i < n -> Divides (x i) (prod n x).
+ i < n -> divide (x i) (prod n x).
 Proof.
 intro.
 induction n as [| n Hrecn].
@@ -942,13 +931,13 @@ intros.
 induction (le_lt_or_eq i n).
 simpl in |- *.
 rewrite mult_comm.
-apply div_mult_compat_l.
+apply Pocklington.divides.div_mult_compat_l.
 apply Hrecn.
 assumption.
 simpl in |- *.
-apply div_mult_compat_l.
+apply Pocklington.divides.div_mult_compat_l.
 rewrite H0.
-apply div_refl.
+apply Pocklington.divides.div_refl.
 apply lt_n_Sm_le.
 assumption.
 Qed.
@@ -1026,7 +1015,7 @@ induction p0 as (H15, H16).
 rewrite H13 in H11.
 apply uniqueRem with (x z) x1.
 apply (ltgt1 (y z) (x z) (py z pz)).
-assert (Divides (x z) (prod n x)).
+assert (divide (x z) (prod n x)).
 apply divProd.
 assumption.
 induction H17 as (x5, H17).
@@ -1070,19 +1059,19 @@ auto.
 Qed.
 
 Lemma primeDiv :
- forall a : nat, 1 < a -> exists p : nat, Prime p /\ Divides p a.
+ forall a : nat, 1 < a -> exists p : nat, Pocklington.prime.Prime p /\ divide p a.
 intro a.
 apply (lt_wf_ind a).
 clear a.
 intros.
-induction (primedec n).
+induction ( Pocklington.prime.primedec n).
 exists n.
 split.
 assumption.
 exists 1.
 symmetry  in |- *.
 apply mult_1_r.
-induction (nonprime_witness _ H0 H1).
+induction ( Pocklington.prime.nonprime_witness _ H0 H1).
 induction H2 as (H2, H3).
 induction H3 as (H3, H4).
 induction (H _ H3 H2).
@@ -1090,14 +1079,14 @@ exists x0.
 induction H5 as (H5, H6).
 split.
 assumption.
-eapply div_trans.
+eapply  Pocklington.divides.div_trans.
 apply H6.
 assumption.
 Qed.
 
 Lemma coPrimePrime :
  forall a b : nat,
- (forall p : nat, Prime p -> ~ Divides p a \/ ~ Divides p b) -> CoPrime a b.
+ (forall p : nat, Pocklington.prime.Prime p -> ~ divide p a \/ ~ divide p b) -> CoPrime a b.
 Proof.
 intros.
 unfold CoPrime in |- *.
@@ -1105,65 +1094,65 @@ split.
 split.
 exists a.
 rewrite mult_1_l.
-apply abs_inj.
+apply Pocklington.natZ.abs_inj.
 exists b.
 rewrite mult_1_l.
-apply abs_inj.
+apply  Pocklington.natZ.abs_inj.
 intros.
 induction H0 as (H0, H1).
-rewrite abs_inj in H0.
-rewrite abs_inj in H1.
+rewrite  Pocklington.natZ.abs_inj in H0.
+rewrite  Pocklington.natZ.abs_inj in H1.
 induction (le_or_lt e 1).
 assumption.
 induction (primeDiv _ H2).
 induction H3 as (H3, H4).
 induction (H _ H3).
 elim H5.
-eapply div_trans.
+eapply Pocklington.divides.div_trans.
 apply H4.
 assumption.
 elim H5.
-eapply div_trans.
+eapply Pocklington.divides.div_trans.
 apply H4.
 assumption.
 Qed.
 
 Lemma coPrimeSeqHelp :
  forall c i j n : nat,
- Divides (factorial n) c ->
+ divide (factorial n) c ->
  i < j -> i <= n -> j <= n -> CoPrime (S (c * S i)) (S (c * S j)).
 Proof.
 intros.
 apply coPrimePrime.
 intros.
-induction (divdec (S (c * S i)) p).
-assert (~ Divides p c).
+induction (Pocklington.divides.divdec (S (c * S i)) p).
+assert (~ divide p c).
 unfold not in |- *.
 intros.
-assert (Divides p 1).
-eapply div_plus_r.
-apply div_mult_compat_l.
+assert (divide p 1).
+eapply Pocklington.divides.div_plus_r.
+apply Pocklington.divides.div_mult_compat_l.
 apply H5.
 rewrite plus_comm.
 simpl in |- *.
 apply H4.
 induction H3 as (H3, H7).
 elim (lt_not_le _ _ H3).
-apply div_le.
+apply Pocklington.divides.div_le.
 apply lt_n_Sn.
 assumption.
-induction (divdec (S (c * S j)) p).
-assert (Divides p (c * (j - i))).
+induction (Pocklington.divides.divdec (S (c * S j)) p).
+assert (divide p (c * (j - i))).
 rewrite minusS.
 rewrite mult_comm.
 rewrite mult_minus_distr_r.
 rewrite (mult_comm (S j)).
 rewrite (mult_comm (S i)).
 rewrite minusS.
-apply div_minus_compat.
+apply Pocklington.divides.div_minus_compat.
 assumption.
 assumption.
-induction (primedivmult _ _ _ H3 H7).
+induction (Pocklington.modprime.primedivmult _ _ _ H3 H7).
 elim H5.
 assumption.
 assert (j - i <= n).
@@ -1171,8 +1160,8 @@ eapply le_trans.
 apply Minus.le_minus.
 assumption.
 elim H5.
-apply div_trans with (factorial n).
-apply div_trans with (j - i).
+apply Pocklington.divides.div_trans with (factorial n).
+apply Pocklington.divides.div_trans with (j - i).
 assumption.
 unfold factorial in |- *.
 assert (1 <= j - i).
@@ -1209,7 +1198,7 @@ Definition coPrimeBeta (z c : nat) : nat := S (c * S z).
 
 Lemma coPrimeSeq :
  forall c i j n : nat,
- Divides (factorial n) c ->
+ divide (factorial n) c ->
  i <> j -> i <= n -> j <= n -> CoPrime (coPrimeBeta i c) (coPrimeBeta j c).
 Proof.
 unfold coPrimeBeta in |- *.
@@ -1263,7 +1252,7 @@ Qed.
 
 Theorem divProd2 :
  forall (n : nat) (x : nat -> nat) (i : nat),
- i <= n -> Divides (prod i x) (prod n x).
+ i <= n -> divide (prod i x) (prod n x).
 Proof.
 simple induction n.
 intros.
@@ -1271,17 +1260,17 @@ assert (0 = i).
 apply le_n_O_eq.
 assumption.
 rewrite H0.
-apply div_refl.
+apply Pocklington.divides.div_refl.
 intros.
 induction (le_lt_or_eq i (S n0)).
 simpl in |- *.
 rewrite mult_comm.
-apply div_mult_compat_l.
+apply Pocklington.divides.div_mult_compat_l.
 apply H.
 apply lt_n_Sm_le.
 assumption.
 rewrite H1.
-apply div_refl.
+apply Pocklington.divides.div_refl.
 assumption.
 Qed.
 
@@ -1301,12 +1290,12 @@ assert
 intros.
 unfold x in |- *.
 eapply coPrimeSeq.
-eapply div_trans.
+eapply Pocklington.divides.div_trans.
 unfold factorial in |- *.
 apply divProd2.
 apply le_max_l.
 unfold c, factorial in |- *.
-apply div_refl.
+apply Pocklington.divides.div_refl.
 assumption.
 apply lt_le_weak.
 assumption.
