@@ -681,9 +681,6 @@ Proof.
     assumption.
 Qed.
 
-Require Import Arith. 
-
-Search (0 < _ * _ )%nat.
 
 
 Lemma prodBig1 :
@@ -963,35 +960,30 @@ Qed.
 
 Lemma coPrimePrime :
  forall a b : nat,
- (forall p : nat, Pocklington.prime.Prime p -> ~ divide p a \/ ~ divide p b) -> CoPrime a b.
+   (forall p : nat, Pocklington.prime.Prime p ->
+                    ~ divide p a \/ ~ divide p b) ->
+   CoPrime a b.
 Proof.
-intros.
-unfold CoPrime in |- *.
-split.
-split.
-exists a.
-rewrite mult_1_l.
-apply Znat.Zabs2Nat.id.
-exists b.
-rewrite mult_1_l.
-apply  Znat.Zabs2Nat.id.
-intros.
-induction H0 as (H0, H1).
-rewrite  Znat.Zabs2Nat.id in H0.
-rewrite  Znat.Zabs2Nat.id in H1.
-induction (le_or_lt e 1).
-assumption.
-induction (primeDiv _ H2).
-induction H3 as (H3, H4).
-induction (H _ H3).
-elim H5.
-eapply Pocklington.divides.div_trans.
-apply H4.
-assumption.
-elim H5.
-eapply Pocklington.divides.div_trans.
-apply H4.
-assumption.
+  intros a b H; unfold CoPrime in |- *.
+  split.
+  - split.
+    + exists a; rewrite Nat.mul_1_l; apply Znat.Zabs2Nat.id.
+    + exists b; rewrite Nat.mul_1_l; apply  Znat.Zabs2Nat.id.
+  - intros e [H0 H1].
+    rewrite  Znat.Zabs2Nat.id in H0.
+    rewrite  Znat.Zabs2Nat.id in H1.
+    induction (le_or_lt e 1).
+    + assumption.
+    + induction (primeDiv _ H2) as [f [H3 H4]].
+      induction (H _ H3) as [H5 | H5].
+      * elim H5.
+        eapply Pocklington.divides.div_trans.
+        apply H4.
+        assumption.
+      * elim H5.
+        eapply Pocklington.divides.div_trans.
+        apply H4.
+        assumption.
 Qed.
 
 Lemma coPrimeSeqHelp :
@@ -999,99 +991,100 @@ Lemma coPrimeSeqHelp :
  divide (factorial n) c ->
  i < j -> i <= n -> j <= n -> CoPrime (S (c * S i)) (S (c * S j)).
 Proof.
-intros.
-apply coPrimePrime.
-intros.
-induction (Pocklington.divides.divdec (S (c * S i)) p).
-assert (~ divide p c).
-unfold not in |- *.
-intros.
-assert (divide p 1).
-eapply Pocklington.divides.div_plus_r.
-apply Pocklington.divides.div_mult_compat_l.
-apply H5.
-rewrite plus_comm.
-simpl in |- *.
-apply H4.
-induction H3 as (H3, H7).
-elim (lt_not_le _ _ H3).
-apply Pocklington.divides.div_le.
-apply lt_n_Sn.
-assumption.
-induction (Pocklington.divides.divdec (S (c * S j)) p).
-assert (divide p (c * (j - i))).
-rewrite minusS.
-rewrite Nat.mul_comm.
-rewrite mult_minus_distr_r.
-rewrite (Nat.mul_comm (S j)).
-rewrite (Nat.mul_comm (S i)).
-rewrite minusS.
-apply Pocklington.divides.div_minus_compat.
-assumption.
-assumption.
-induction (Pocklington.modprime.primedivmult _ _ _ H3 H7).
-elim H5.
-assumption.
-assert (j - i <= n).
-eapply le_trans.
-apply Minus.le_minus.
-assumption.
-elim H5.
-apply Pocklington.divides.div_trans with (factorial n).
-apply Pocklington.divides.div_trans with (j - i).
-assumption.
-unfold factorial in |- *.
-assert (1 <= j - i).
-assert (j = i + (j - i)).
-apply le_plus_minus.
-apply lt_le_weak.
-assumption.
-rewrite H10 in H0.
-apply lt_n_Sm_le.
-apply lt_n_S.
-apply plus_lt_reg_l with i.
-rewrite plus_comm.
-apply H0.
-replace (j - i) with (S (pred (j - i))).
-apply divProd.
-rewrite pred_of_minus.
-apply lt_S_n.
-apply le_lt_n_Sm.
-replace (S (j - i - 1)) with (1 + (j - i - 1)).
-rewrite <- le_plus_minus.
-assumption.
-assumption.
-auto.
-induction (j - i).
-elim (le_Sn_n _ H10).
-rewrite <- pred_Sn.
-reflexivity.
-assumption.
-auto.
-auto.
+  intros ? ? ? ? H H0 H1 H2.
+  apply coPrimePrime.
+  intros p H3.
+  induction (Pocklington.divides.divdec (S (c * S i)) p) as [H4 | H4].
+   assert (H5: ~ divide p c).
+   { intro H5. 
+     assert (H6: divide p 1).
+     { eapply Pocklington.divides.div_plus_r.
+       apply Pocklington.divides.div_mult_compat_l.
+       apply H5.
+       rewrite plus_comm.
+       simpl in |- *.
+       apply H4.
+     }
+     induction H3 as (H3, H7).
+     elim (lt_not_le _ _ H3).
+     apply Pocklington.divides.div_le.
+     apply lt_n_Sn.
+     assumption.
+   }
+   induction (Pocklington.divides.divdec (S (c * S j)) p).
+   assert (H7: divide p (c * (j - i))).
+   { rewrite minusS.
+     rewrite Nat.mul_comm.
+     rewrite mult_minus_distr_r.
+     rewrite (Nat.mul_comm (S j)).
+     rewrite (Nat.mul_comm (S i)).
+     rewrite minusS.
+     apply Pocklington.divides.div_minus_compat.
+     assumption.
+     assumption.
+   }
+   induction (Pocklington.modprime.primedivmult _ _ _ H3 H7).
+  - elim H5.
+    assumption.
+  - assert (H9: j - i <= n).
+    { eapply le_trans.
+      apply Minus.le_minus.
+      assumption.
+    }
+    elim H5.
+    apply Pocklington.divides.div_trans with (factorial n).
+    apply Pocklington.divides.div_trans with (j - i).
+    assumption.
+    unfold factorial in |- *.
+    assert (H10: 1 <= j - i).
+    { assert (H10: j = i + (j - i)).
+      apply le_plus_minus.
+      apply lt_le_weak.
+      assumption.
+      rewrite H10 in H0.
+      lia.       
+    }
+    replace (j - i) with (S (pred (j - i))).
+    apply divProd.
+    rewrite pred_of_minus.
+    apply lt_S_n.
+    apply le_lt_n_Sm.
+    replace (S (j - i - 1)) with (1 + (j - i - 1)).
+    rewrite <- le_plus_minus.
+    assumption.
+    assumption.
+    auto.
+    induction (j - i).
+    elim (le_Sn_n _ H10).
+    rewrite <- pred_Sn.
+    reflexivity.
+    assumption.
+- auto.
+- auto.
 Qed.
 
 Definition coPrimeBeta (z c : nat) : nat := S (c * S z).
 
 Lemma coPrimeSeq :
- forall c i j n : nat,
- divide (factorial n) c ->
- i <> j -> i <= n -> j <= n -> CoPrime (coPrimeBeta i c) (coPrimeBeta j c).
+  forall c i j n : nat,
+    divide (factorial n) c ->
+    i <> j -> i <= n -> j <= n ->
+    CoPrime (coPrimeBeta i c) (coPrimeBeta j c).
 Proof.
 unfold coPrimeBeta in |- *.
-intros.
-induction (nat_total_order _ _ H0).
-eapply coPrimeSeqHelp.
-apply H.
-assumption.
-assumption.
-assumption.
-apply coPrimeSym.
-eapply coPrimeSeqHelp.
-apply H.
-assumption.
-assumption.
-assumption.
+intros ? ? ? ? H H0 H1 H2.
+induction (nat_total_order _ _ H0) as [H3 | H3]. 
+- eapply coPrimeSeqHelp.
+  apply H.
+  assumption.
+  assumption.
+  assumption.
+- apply coPrimeSym.
+  eapply coPrimeSeqHelp.
+  + apply H.
+  + assumption.
+  + assumption.
+  + assumption.
 Qed.
 
 Lemma gtBeta : forall z c : nat, coPrimeBeta z c > 0.
