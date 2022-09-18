@@ -1,5 +1,3 @@
-Set Apply With Renaming.
-
 From Coq Require Import Arith.
 From hydras.Ackermann Require Import extEqualNat.
 From hydras.Ackermann Require Import subAll.
