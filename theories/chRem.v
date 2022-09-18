@@ -1089,59 +1089,45 @@ Qed.
 
 Lemma gtBeta : forall z c : nat, coPrimeBeta z c > 0.
 Proof.
-unfold coPrimeBeta in |- *.
-intros.
-apply gt_Sn_O.
+  unfold coPrimeBeta in |- *; intros; apply gt_Sn_O.
 Qed.
 
-Definition maxBeta (n : nat) (x : nat -> nat) : nat.
-intros.
-induction n as [| n Hrecn].
-exact 0.
-exact (max (x n) Hrecn).
-Defined.
+Fixpoint maxBeta (n: nat) (x: nat -> nat) :=
+  match n with
+  | 0 => 0
+  | S n => Nat.max (x n) (maxBeta n x)
+  end.
 
 Lemma maxBetaLe :
- forall (n : nat) (x : nat -> nat) (i : nat), i < n -> x i <= maxBeta n x.
+  forall (n : nat) (x : nat -> nat) (i : nat),
+    i < n -> x i <= maxBeta n x.
 Proof.
-simple induction n.
-intros.
-elim (lt_n_O _ H).
-intros.
-simpl in |- *.
-induction (le_lt_or_eq i n0).
-eapply le_trans.
-apply H.
-assumption.
-apply le_max_r.
-rewrite H1.
-apply le_max_l.
-apply lt_n_Sm_le.
-assumption.
+  simple induction n.
+  - intros x i H; elim (lt_n_O _ H).
+  - intros; simpl in |- *; induction (le_lt_or_eq i n0).
+    + eapply le_trans; [now apply H | apply le_max_r].
+    + rewrite H1; apply le_max_l.
+    + now apply lt_n_Sm_le.
 Qed.
 
 Theorem divProd2 :
  forall (n : nat) (x : nat -> nat) (i : nat),
  i <= n -> divide (prod i x) (prod n x).
 Proof.
-simple induction n.
-intros.
-assert (0 = i).
-apply le_n_O_eq.
-assumption.
-rewrite H0.
-apply Pocklington.divides.div_refl.
-intros.
-induction (le_lt_or_eq i (S n0)).
-simpl in |- *.
-rewrite Nat.mul_comm.
-apply Pocklington.divides.div_mult_compat_l.
-apply H.
-apply lt_n_Sm_le.
-assumption.
-rewrite H1.
-apply Pocklington.divides.div_refl.
-assumption.
+  simple induction n.
+  - intros x i ?; assert (H0: (0 = i)) by (now apply le_n_O_eq).
+    rewrite H0.
+    apply Pocklington.divides.div_refl.
+  - intros n0 H x i H0.
+    induction (le_lt_or_eq i (S n0)).
+    + simpl in |- *.
+      rewrite Nat.mul_comm.
+      apply Pocklington.divides.div_mult_compat_l.
+      apply H.
+      apply lt_n_Sm_le.
+      assumption.
+    + rewrite H1; apply Pocklington.divides.div_refl.
+    + assumption.
 Qed.
 
 Theorem betaTheorem1 :
@@ -1150,105 +1136,102 @@ Theorem betaTheorem1 :
  forall z : nat,
  z < n ->
  y z =
- snd (proj1_sig (modulo (coPrimeBeta z (snd a)) (gtBeta z (snd a)) (fst a)))}.
+   snd (proj1_sig (modulo (coPrimeBeta z (snd a))
+                     (gtBeta z (snd a)) (fst a)))}.
 Proof.
-intros.
-set (c := factorial (max n (maxBeta n y))) in *.
-set (x := fun z : nat => coPrimeBeta z c) in *.
-assert
- (forall z1 z2 : nat, z1 < n -> z2 < n -> z1 <> z2 -> CoPrime (x z1) (x z2)).
-intros.
-unfold x in |- *.
-eapply coPrimeSeq.
-eapply Pocklington.divides.div_trans.
-unfold factorial in |- *.
-apply divProd2.
-apply le_max_l.
-unfold c, factorial in |- *.
-apply Pocklington.divides.div_refl.
-assumption.
-apply lt_le_weak.
-assumption.
-apply lt_le_weak.
-assumption.
-assert (forall z : nat, z < n -> y z < x z).
-intros.
-unfold x, coPrimeBeta in |- *.
-apply le_lt_n_Sm.
-induction (mult_O_le c (S z)).
-discriminate H1.
-apply le_trans with c.
-unfold c in |- *.
-apply le_trans with (max n (maxBeta n y)).
-apply le_trans with (maxBeta n y).
-apply maxBetaLe.
-assumption.
-apply le_max_r.
-generalize (max n (maxBeta n y)).
-intros.
-induction n0 as [| n0 Hrecn0].
-simpl in |- *.
-apply le_n_Sn.
-induction n0 as [| n0 Hrecn1].
-simpl in |- *.
-apply le_n.
-assert (factorial n0 > 0).
-unfold factorial in |- *.
-apply prodBig1.
-intros.
-apply gt_Sn_O.
-simpl in |- *.
-eapply le_trans with (1 + (1 + n0 * (factorial n0 + n0 * factorial n0))).
-simpl in |- *.
-repeat apply le_n_S.
-induction (mult_O_le n0 (factorial n0 + n0 * factorial n0)).
-unfold gt in H2.
-assert (factorial n0 = factorial n0 + 0).
-rewrite plus_comm.
-auto.
-assert (0 < factorial n0).
-assumption.
-rewrite H4 in H2.
-set (A1 := factorial n0 + 0) in *.
-rewrite <- H3 in H2.
-unfold A1 in H2.
-clear H4 A1.
-assert (n0 * factorial n0 < 0).
-eapply plus_lt_reg_l.
-apply H2.
-elim (lt_n_O _ H4).
-rewrite Nat.mul_comm.
-assumption.
-apply plus_le_compat.
-apply le_plus_trans.
-apply lt_n_Sm_le.
-apply lt_n_S.
-assumption.
-apply plus_le_compat.
-apply le_plus_trans.
-apply lt_n_Sm_le.
-apply lt_n_S.
-assumption.
-apply le_n.
-rewrite Nat.mul_comm.
-assumption.
-induction (chRem _ _ H _ H0).
-exists (x0, c).
-intros.
-induction p as (H2, H3).
-rewrite (H3 z H1).
-induction (modulo (x z) (ltgt1 (y z) (x z) (H0 z H1)) x0).
-replace (snd (x0, c)) with c.
-replace (fst (x0, c)) with x0.
-induction (modulo (coPrimeBeta z c) (gtBeta z c) x0).
-simpl in |- *.
-eapply uniqueRem.
-apply gtBeta.
-unfold x in p.
-exists (fst x1).
-apply p.
-exists (fst x2).
-apply p0.
-auto.
-auto.
+  intros n y.
+  set (c := factorial (max n (maxBeta n y))) in *.
+  set (x := fun z : nat => coPrimeBeta z c) in *.
+  assert
+    (H: forall z1 z2 : nat,
+        z1 < n -> z2 < n -> z1 <> z2 -> CoPrime (x z1) (x z2)).
+  { intros; unfold x in |- *; eapply coPrimeSeq.
+    - eapply Pocklington.divides.div_trans.
+      + unfold factorial in |- *; apply divProd2.
+        apply le_max_l.
+      + unfold c, factorial in |- *.
+        apply Pocklington.divides.div_refl.
+    - assumption.
+    - now apply lt_le_weak.
+    -apply lt_le_weak; assumption.
+  }
+  assert (H0: forall z : nat, z < n -> y z < x z).
+  { intros; unfold x, coPrimeBeta in |- *.
+    apply le_lt_n_Sm.
+    induction (mult_O_le c (S z)).
+    - discriminate H1.
+    - apply le_trans with c.
+      + unfold c in |- *.
+        apply le_trans with (max n (maxBeta n y)).
+        apply le_trans with (maxBeta n y).
+        apply maxBetaLe.
+        assumption.
+        apply le_max_r.
+        generalize (max n (maxBeta n y)).
+        intros.
+        induction n0 as [| n0 Hrecn0].
+        simpl in |- *.
+        apply le_n_Sn.
+        induction n0 as [| n0 Hrecn1].
+        simpl in |- *.
+        apply le_n.
+        assert (H2: factorial n0 > 0).
+        { unfold factorial in |- *.
+          apply prodBig1.
+          intros.
+          apply gt_Sn_O.
+        }
+        simpl in |- *.
+        apply le_trans with
+          (1 + (1 + n0 * (factorial n0 + n0 * factorial n0))).
+        * simpl in |- *.
+          repeat apply le_n_S.
+          induction (mult_O_le n0 (factorial n0 + n0 * factorial n0)).
+          -- unfold gt in H2.
+             assert (H4: factorial n0 = factorial n0 + 0)
+               by (rewrite Nat.add_comm; auto).
+             rewrite H4 in H2.
+             set (A1 := factorial n0 + 0) in *.
+             rewrite <- H3 in H2.
+             unfold A1 in H2.
+             clear H4 A1.
+             assert (H4: n0 * factorial n0 < 0).
+             { eapply plus_lt_reg_l.
+               apply H2.
+             }
+             elim (lt_n_O _ H4).
+          -- rewrite Nat.mul_comm.
+             assumption.
+        * apply plus_le_compat.
+          apply le_plus_trans.
+          apply lt_n_Sm_le.
+          apply lt_n_S.
+          assumption.
+          apply plus_le_compat.
+          apply le_plus_trans.
+          apply lt_n_Sm_le.
+          apply lt_n_S.
+          assumption.
+          apply le_n.
+      + rewrite Nat.mul_comm.
+        assumption.
+  }
+  induction (chRem _ _ H _ H0) as [x0 [H2 H3]].
+  exists (x0, c).
+  intros.
+  rewrite (H3 z H1).
+  induction (modulo (x z) (ltgt1 (y z) (x z) (H0 z H1)) x0).
+  replace (snd (x0, c)) with c.
+  replace (fst (x0, c)) with x0.
+  induction (modulo (coPrimeBeta z c) (gtBeta z c) x0) as [x2 p0].
+  simpl in |- *.
+  eapply uniqueRem.
+  apply gtBeta.
+  unfold x in p.
+  exists (fst x1).
+  apply p.
+  exists (fst x2).
+  apply p0.
+  auto.
+  auto.
 Qed.
