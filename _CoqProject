@@ -10,4 +10,4 @@ theories/rosserPA.v
 theories/rosser.v
 theories/PRrepresentable.v
 theories/tryCoqPrime.v
-
+theories/compatCoqPrime.v

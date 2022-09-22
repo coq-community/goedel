@@ -11,4 +11,4 @@ From Coqprime Require Import ZCAux.
 Goal (3 | 6).
 Proof. now exists 2. Qed.
 
-Search Zis_gcd. 
+

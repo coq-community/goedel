@@ -6,46 +6,39 @@ From Coq Require Import ZArith_dec.
 
 
 (* should be removed later ! *)
-From Pocklington Require gcd divides natZ prime modprime. 
-From Coq Require Import Max.
+From Pocklington Require gcd divides  prime modprime. 
+
+From Coqprime  Require Import NatAux ZCAux ZCmisc ZSum Pmod Ppow.
+
+Require Export compatCoqPrime.
+
+(** * Compatibility lemmas (provisional) *)
+
+(** more general than [NatAux] lemma *)
+
+(* To remove when unused *)
+
+Lemma ZDivides_compat x y : divides.ZDivides x y <-> Z.divide x y.
+Proof. 
+ split; intros [q Hq]; exists q; now rewrite Z.mul_comm. 
+Qed.
 
 
+Print Pocklington.gcd.gcd.
 
-From Coqprime
-  Require Import NatAux ZCAux ZCmisc ZSum Pmod Ppow.
-
-Lemma divide_le d n (* compatibility with CoqPrime *)
-  : (0 < n)%nat ->
-    Pocklington.divides.Divides d n ->
-    (d <= n)%nat.
-Proof.
-  destruct n. 
-  - inversion 1.
-  - destruct n.
-    + intros _ [q Hq]; destruct (Nat.eq_mul_1 d q)
-        as [[H1 H'1] _];
-        [now symmetry| subst; apply le_n].
-    + intros; apply NatAux.divide_le; auto with arith.
-Qed. 
-
-
-(* provisional *)
-
-Lemma divides_compat x y : Pocklington.divides.Divides x y <->
-                             divide x y. 
-Proof. split; intros [q Hq]; now exists q. Qed. 
-
-
-Definition CoPrime (a b : nat) :=
+Definition CoPrime (a b : nat) := (* done *)
   Pocklington.gcd.gcd (Z.of_nat a) (Z.of_nat b) 1.
+(*
+  Pocklington.gcd.gcd (Z.of_nat a) (Z.of_nat b) 1.
+ *)
 
 (* Should be:
    Zis_gcd (Z.of_nat a) (Z.of_nat b) 1%Z. *)
 
-Lemma coPrimeSym : forall a b : nat, CoPrime a b -> CoPrime b a.
+Lemma coPrimeSym (* done *) : forall a b : nat, CoPrime a b -> CoPrime b a.
 Proof. intros; now apply Pocklington.gcd.gcd_sym. Qed.
 
-Lemma coPrimeMult :
+Lemma coPrimeMult : (* done *)
   forall a b c : nat, CoPrime a b -> divide a (b * c) -> divide a c.
 Proof.
   intros ? ? ? H H0; unfold CoPrime in H.
@@ -85,34 +78,34 @@ Proof.
       now rewrite <- H2.
     }
     rewrite Zmult_1_l in H3.
-    assert (Pocklington.divides.ZDivides (Z.of_nat (S a)) (Z.of_nat c)).
-    { now exists (x * Z.of_nat c + Z.of_nat x1 * x0)%Z. }
+    assert (Z.divide (Z.of_nat (S a)) (Z.of_nat c)).
+    { exists (x * Z.of_nat c + Z.of_nat x1 * x0)%Z.
+    now rewrite Z.mul_comm at 1. }
     clear H2 H3 x x0.
     rewrite <- (Znat.Zabs2Nat.id (S a)).
     rewrite <- (Znat.Zabs2Nat.id c).
-    now apply Pocklington.divides.zdivdiv.
+    apply Pocklington.divides.zdivdiv.
+    now apply ZDivides_compat.
 Qed.
 
-
-
-
-Lemma coPrimeMult2 :
+Lemma coPrimeMult2 : (* done *)
   forall a b c : nat,
     CoPrime a b -> divide a c -> divide b c -> divide (a * b) c.
 Proof.
   intros a b c H H0 [x H1].
-  assert (Pocklington.divides.Divides a x).
+  assert (divide a x).
   { eapply coPrimeMult with (1:= H); now rewrite <- H1. }
   destruct H2 as [x0 H2]; exists x0; subst; ring.   
 Qed.
 
-Lemma ltgt1 : forall a b : nat, (a < b -> b > 0)%nat. 
+Lemma ltgt1 (* done *): forall a b : nat, (a < b -> b > 0)%nat. (* done *)
 Proof. lia. Qed.
 
-Lemma minus1 : forall a b c : Z, (a - c)%Z = (b - c)%Z -> a = b.
+Lemma minus1 (* done *)
+  : forall a b c : Z, (a - c)%Z = (b - c)%Z -> a = b.
 Proof. lia. Qed.
 
-Lemma chRem2 :
+Lemma chRem2 : (* done *)
   forall b1 r1 b2 r2 q : Z,
     (0 <= r1)%Z ->
     (0 <= r2)%Z ->
@@ -208,366 +201,323 @@ Proof.
   assumption.
 Qed.
 
-Lemma Z_of_nat_inj: forall a b : nat, Z.of_nat a = Z.of_nat b -> a = b.
-Proof. lia. Qed.
+
 
 Open Scope nat_scope. 
 
-Lemma uniqueRem :
+Lemma uniqueRem : (* done *)
  forall r1 r2 b : nat,
  b > 0 ->
  forall a : nat,
  (exists q : nat, a = q * b + r1 /\ b > r1) ->
  (exists q : nat, a = q * b + r2 /\ b > r2) -> r1 = r2.
 Proof.
-intros.
-induction H0 as (x, H0); induction H0 as (H0, H2).
-induction H1 as (x0, H1); induction H1 as (H1, H3).
-apply Z_of_nat_inj.
-eapply chRem2.
-replace 0%Z with (Z.of_nat 0).
-apply Znat.inj_le.
-apply le_O_n.
-auto.
-replace 0%Z with (Z.of_nat 0).
-apply Znat.inj_le.
-apply le_O_n.
-auto.
-apply Znat.inj_lt.
-apply H2.
-apply Znat.inj_lt.
-apply H3.
-repeat rewrite <- Znat.inj_mult.
-repeat rewrite <- Znat.inj_plus.
-apply Znat.inj_eq.
-transitivity a.
-symmetry  in |- *.
-apply H0.
-apply H1.
+  intros ? ? ? H a [x [H0 H2]] [x0 [H1 H3]].
+  apply Z_of_nat_inj; eapply chRem2.
+  - replace 0%Z with (Z.of_nat 0).
+    + apply Znat.inj_le.
+      apply le_O_n.
+    + auto.
+  - replace 0%Z with (Z.of_nat 0).
+    + apply Znat.inj_le.
+      apply le_O_n.
+    + auto.
+  - apply Znat.inj_lt; apply H2.
+  - apply Znat.inj_lt; apply H3.
+  - repeat rewrite <- Znat.inj_mult.
+    repeat rewrite <- Znat.inj_plus.
+    apply Znat.inj_eq.
+    transitivity a.
+    symmetry  in |- *.
+    apply H0.
+    apply H1.
 Qed.
 
 Lemma modulo :
- forall b : nat,
- b > 0 ->
+ forall b : nat,  b > 0 ->
  forall a : nat, {p : nat * nat | a = fst p * b + snd p /\ b > snd p}.
 Proof.
-intros.
-apply (gt_wf_rec a).
-intros.
-induction (le_lt_dec b n).
-assert (n > n - b).
-unfold gt in |- *.
-apply lt_minus.
-assumption.
-assumption.
-induction (H0 _ H1).
-induction x as (a1, b0).
-simpl in p.
-exists (S a1, b0).
-simpl in |- *.
-induction p as (H2, H3).
-split.
-rewrite <- Nat.add_assoc.
-rewrite <- H2.
-apply le_plus_minus.
-assumption.
-assumption.
-exists (0, n).
-simpl in |- *.
-split.
-reflexivity.
-assumption.
+  intros b H a; apply (gt_wf_rec a).
+  intros n H0 .
+  destruct (le_lt_dec b n) as [Hle | Hlt].
+  - assert (n > n - b).
+    { unfold gt in |- *; apply lt_minus; assumption. }
+    destruct (H0 _ H1) as [[a1 b0] p].
+    simpl in p;  exists (S a1, b0); simpl in |- *.
+    destruct p as (H2, H3).
+    split.
+    + rewrite <- Nat.add_assoc, <- H2.
+      now apply le_plus_minus.
+    + assumption.
+  -  exists (0, n);   simpl in |- *; now split.
 Qed.
 
 
-Lemma chRem1 :
- forall b : nat,
- b > 0 ->
- forall a : Z,
- {p : Z * nat | snd p < b /\ Z.of_nat (snd p) = (fst p * Z.of_nat b + a)%Z}.
+Lemma chRem1 : (* done *)
+ forall b : nat,  b > 0 -> forall a : Z,
+     {p : Z * nat | snd p < b /\
+                      Z.of_nat (snd p) = (fst p * Z.of_nat b + a)%Z}.
 Proof.
-intros.
-assert
- (forall a' : Z,
-  (a' >= 0)%Z ->
-  {p : Z * nat | snd p < b /\ Z.of_nat (snd p) = (fst p * Z.of_nat b + a')%Z}).
-intros.
-set (A := Z.abs_nat a') in *.
-induction (modulo b H A).
-induction x as (a0, b0).
-exists ((- Z.of_nat a0)%Z, b0).
-induction p as (H1, H2).
-split.
-apply H2.
-rewrite <- (Pocklington.natZ.inj_abs_pos a').
-replace (fst ((- Z.of_nat a0)%Z, b0)) with (- Z.of_nat a0)%Z.
-replace (snd ((- Z.of_nat a0)%Z, b0)) with b0.
-rewrite Zopp_mult_distr_l_reverse.
-rewrite Zplus_comm.
-fold (Z.of_nat (Z.abs_nat a') - Z.of_nat a0 * Z.of_nat b)%Z in |- *.
-apply Zplus_minus_eq.
-rewrite <- Znat.inj_mult.
-rewrite <- Znat.inj_plus.
-apply Znat.inj_eq.
-apply H1.
-auto.
-auto.
-assumption.
-
-induction (Z_ge_lt_dec a 0).
-apply H0.
-assumption.
-assert (a + Z.of_nat b * - a >= 0)%Z.
-induction b as [| b Hrecb].
-elim (lt_irrefl _ H).
-rewrite Znat.inj_S.
-rewrite Z.mul_comm.
-rewrite <- Zmult_succ_r_reverse.
-fold (- a * Z.of_nat b - a)%Z in |- *.
-rewrite Zplus_minus.
-replace 0%Z with (0 * Z.of_nat b)%Z.
-apply Zmult_ge_compat_r.
-rewrite (Zminus_diag_reverse a).
-rewrite <- (Zplus_0_l (- a)).
-unfold Zminus in |- *.
-apply Z.le_ge.
-apply Zplus_le_compat_r.
-apply Zlt_le_weak.
-assumption.
-replace 0%Z with (Z.of_nat 0).
-apply Znat.inj_ge.
-unfold ge in |- *.
-apply le_O_n.
-auto.
-auto.
-induction (H0 _ H1).
-induction p as (H2, H3).
-induction x as (a0, b1).
-exists ((a0 - a)%Z, b1).
-split.
-simpl in |- *.
-apply H2.
-cbv beta iota zeta delta [fst snd] in |- *.
-cbv beta iota zeta delta [fst snd] in H3.
-rewrite H3.
-rewrite (Zplus_comm a).
-rewrite Zplus_assoc.
-apply Zplus_eq_compat.
-rewrite Zmult_minus_distr_r.
-unfold Zminus in |- *.
-apply Zplus_eq_compat.
-reflexivity.
-rewrite Z.mul_comm.
-apply Zopp_mult_distr_l_reverse.
-reflexivity.
+  intros b H a.
+  assert
+    (H0: forall a' : Z,
+        (a' >= 0)%Z ->
+        {p : Z * nat | snd p < b /\
+                         Z.of_nat (snd p) =
+                           (fst p * Z.of_nat b + a')%Z}).
+  { intros a' H0; set (A := Z.to_nat a') in *.
+    induction (modulo b H A) as [x p].
+    destruct x as (a0, b0).
+    exists ((- Z.of_nat a0)%Z, b0).
+    destruct p as (H1, H2).
+    split.
+    - apply H2.
+    - rewrite <- (Z2Nat.id a'). 
+      + simpl fst ; simpl snd. 
+        rewrite Zopp_mult_distr_l_reverse.
+        rewrite Z.add_comm.
+        fold (Z.of_nat (Z.to_nat a') - Z.of_nat a0 * Z.of_nat b)%Z
+          in |- *.
+        apply Zplus_minus_eq.
+        rewrite <- Znat.inj_mult.
+        rewrite <- Znat.inj_plus.
+        apply Znat.inj_eq.
+        apply H1.
+      + auto.
+        now rewrite <- Z.ge_le_iff.
+  }
+  destruct (Z_ge_lt_dec a 0).
+  + apply H0; assumption.
+  + assert (a + Z.of_nat b * - a >= 0)%Z.
+    induction b as [| b Hrecb].
+    * elim (lt_irrefl _ H).
+    * rewrite Znat.inj_S.
+      rewrite Z.mul_comm.
+      rewrite <- Zmult_succ_r_reverse.
+      fold (- a * Z.of_nat b - a)%Z in |- *.
+      rewrite Zplus_minus.
+      replace 0%Z with (0 * Z.of_nat b)%Z.
+      apply Zmult_ge_compat_r.
+      rewrite (Zminus_diag_reverse a).
+      rewrite <- (Zplus_0_l (- a)).
+      unfold Zminus in |- *.
+      apply Z.le_ge.
+      apply Zplus_le_compat_r.
+      apply Zlt_le_weak.
+      assumption.
+      replace 0%Z with (Z.of_nat 0).
+      apply Znat.inj_ge.
+      unfold ge in |- *.
+      apply le_O_n.
+      auto.
+      auto.
+    * induction (H0 _ H1) as [x [H2 H3]].
+      induction x as (a0, b1).
+      exists ((a0 - a)%Z, b1).
+      split.
+      -- simpl in |- *; apply H2.
+      -- cbv beta iota zeta delta [fst snd] in |- *.
+         cbv beta iota zeta delta [fst snd] in H3.
+         rewrite H3.
+         rewrite (Zplus_comm a).
+         rewrite Zplus_assoc.
+         apply Zplus_eq_compat.
+         rewrite Zmult_minus_distr_r.
+         unfold Zminus in |- *.
+         apply Zplus_eq_compat.
+         reflexivity.
+         rewrite Z.mul_comm.
+         apply Zopp_mult_distr_l_reverse.
+         reflexivity.
 Qed.
 
 Lemma gcd_lincomb_nat_dec :
  forall x y d : nat,
  x > 0 ->
  Pocklington.gcd.gcd (Z.of_nat x) (Z.of_nat y) d ->
- {a : Z * Z | Z.of_nat d = (Z.of_nat x * fst a + Z.of_nat y * snd a)%Z}.
+ {a : Z * Z |
+   Z.of_nat d = (Z.of_nat x * fst a + Z.of_nat y * snd a)%Z}.
 Proof.
-   unfold Pocklington.gcd.LinComb in |- *. intro x.
-   apply (lt_wf_rec x). intros X IH. intros.
-   elim (modulo X H y). intro z. 
-   elim z.
-   intros q r.
-   clear z.
-   simpl in |- *.   
+   intro x; apply (lt_wf_rec x); intros X IH. intros y d H H0.
+   elim (modulo X H y).
+   intro z;   elim z.
+   intros q r;  clear z; simpl in |- *.   
    case r.
-
    (* case r = 0 *)
-
-   intros.
-   induction p as (H1, H2).
-   rewrite <- plus_n_O in H1.
-   exists (1%Z, 0%Z).
-   replace (fst (1%Z, 0%Z)) with 1%Z.
-   replace (snd (1%Z, 0%Z)) with 0%Z.
-   rewrite <- Zmult_0_r_reverse. rewrite <- Zplus_0_r_reverse.
-   rewrite Z.mul_comm. rewrite Zmult_1_l.
-   apply Znat.inj_eq.
-   apply (Pocklington.gcd.euclid_gcd d X (Z.of_nat y) (Z.of_nat X) (Z.of_nat q) 0).
-   rewrite <- Zplus_0_r_reverse. rewrite <- Znat.inj_mult. apply Znat.inj_eq. assumption.
-   apply Pocklington.gcd.gcd_sym. assumption. apply Pocklington.gcd.gcd_0_l. assumption.
-   auto.
-   auto.
-
-   (* case r > 0 *)
-   intro r1. intros.
-   induction p as (H1, H2).
+   - intros; induction p as (H1, H2).
+     rewrite <- plus_n_O in H1.
+     exists (1%Z, 0%Z).
+     simpl fst; simpl snd. 
+     rewrite <- Zmult_0_r_reverse;  rewrite <- Zplus_0_r_reverse.
+     rewrite Z.mul_comm. rewrite Zmult_1_l.
+     apply Znat.inj_eq.
+     apply (Pocklington.gcd.euclid_gcd d X (Z.of_nat y)
+              (Z.of_nat X) (Z.of_nat q) 0).
+     rewrite <- Zplus_0_r_reverse; rewrite <- Znat.inj_mult;
+       apply Znat.inj_eq; assumption.
+     apply Pocklington.gcd.gcd_sym; assumption.
+     apply Pocklington.gcd.gcd_0_l; assumption.
+   - (* case r > 0 *)
+   intros r1 [H1 H2].
    elim (IH (S r1) H2 X d).
-   intro z.
-   elim z.
-   intros delta gamma.
-   clear z.
-   replace (fst (delta, gamma)) with delta.
-   replace (snd (delta, gamma)) with gamma.
-   intros.
+   + intro z; elim z.
+     intros delta gamma; clear z.
+     simpl fst; simpl snd.
+   intros p. 
    exists ((gamma - Z.of_nat q * delta)%Z, delta).
-   replace (fst ((gamma - Z.of_nat q * delta)%Z, delta)) with
-    (gamma - Z.of_nat q * delta)%Z.
-   replace (snd ((gamma - Z.of_nat q * delta)%Z, delta)) with delta.
-   rewrite p. rewrite H1.
-   unfold Zminus in |- *. rewrite Zmult_plus_distr_r.
-   rewrite Znat.inj_plus. rewrite Zmult_plus_distr_l.
-   rewrite Znat.inj_mult. rewrite <- Zopp_mult_distr_l_reverse.
+   simpl fst; simpl snd.
+   rewrite p, H1.
+   unfold Zminus in |- *; rewrite Zmult_plus_distr_r.
+   rewrite Znat.inj_plus; rewrite Zmult_plus_distr_l.
+   rewrite Znat.inj_mult; rewrite <- Zopp_mult_distr_l_reverse.
    rewrite (Z.mul_assoc (Z.of_nat X)).
    rewrite (Z.mul_comm (Z.of_nat X) (- Z.of_nat q)).
-   rewrite Zopp_mult_distr_l_reverse. rewrite Zopp_mult_distr_l_reverse.
+   rewrite Zopp_mult_distr_l_reverse.
+   rewrite Zopp_mult_distr_l_reverse.
    rewrite <- (Z.add_assoc (Z.of_nat X * gamma)).
    rewrite <- Znat.inj_mult.
    rewrite (Z.add_assoc (- (Z.of_nat (q * X) * delta))). 
    rewrite Zplus_opp_l. simpl in |- *. apply Z.add_comm.
-auto.
-auto.
-auto.  
-auto.
-   apply gt_Sn_O.
-   apply
-    (Pocklington.gcd.euclid_gcd1 d (Z.of_nat y) (Z.of_nat X) (Z.of_nat q) (Z.of_nat (S r1))).
-   apply Pocklington.gcd.gcd_sym. assumption.
-   rewrite <- Znat.inj_mult. rewrite <- Znat.inj_plus. apply Znat.inj_eq. assumption.
+   + auto with arith. 
+   +  apply
+       (Pocklington.gcd.euclid_gcd1 d (Z.of_nat y) (Z.of_nat X)
+          (Z.of_nat q) (Z.of_nat (S r1))).
+      * apply Pocklington.gcd.gcd_sym;  assumption.
+      * rewrite <- Znat.inj_mult; rewrite <- Znat.inj_plus;
+          apply Znat.inj_eq; assumption.
 Qed.
 
 Lemma chineseRemainderTheoremHelp :
- forall x1 x2 : nat,
- CoPrime x1 x2 ->
- forall (a b : nat) (pa : a < x1) (pb : b < x2),
- a <= b ->
- {y : nat |
- y < x1 * x2 /\
- a = snd (proj1_sig (modulo x1 (ltgt1 _ _ pa) y)) /\
- b = snd (proj1_sig (modulo x2 (ltgt1 _ _ pb) y))}.
+  forall x1 x2 : nat,
+    CoPrime x1 x2 ->
+    forall (a b : nat) (pa : a < x1) (pb : b < x2),
+      a <= b ->
+      {y : nat |
+        y < x1 * x2 /\
+          a = snd (proj1_sig (modulo x1 (ltgt1 _ _ pa) y)) /\
+          b = snd (proj1_sig (modulo x2 (ltgt1 _ _ pb) y))}.
 Proof.
-intros.
-unfold CoPrime in H.
-induction (gcd_lincomb_nat_dec _ _ _ (ltgt1 _ _ pa) H).
-induction x as (a0, b0).
-set (A := Z.of_nat a) in *.
-set (B := Z.of_nat b) in *.
-set (X1 := Z.of_nat x1) in *.
-set (X2 := Z.of_nat x2) in *.
-set (y := (a0 * (B - A))%Z) in *.
-set (z := (b0 * (A - B))%Z) in *.
-set (d := (A + X1 * y)%Z) in *.
-assert (d = (B + X2 * z)%Z).
-unfold d in |- *.
-simpl in p.
-apply minus1 with (X2 * z)%Z.
-rewrite (Zplus_comm B).
-rewrite Zminus_plus.
-unfold z in |- *.
-replace (A - B)%Z with (- (B - A))%Z.
-unfold Zminus in |- *.
-rewrite (Z.mul_comm b0).
-rewrite Zopp_mult_distr_l_reverse.
-rewrite (Z.mul_comm X2).
-rewrite Zopp_mult_distr_l_reverse.
-rewrite Z.opp_involutive.
-unfold y in |- *.
-rewrite <- (Z.mul_assoc (B + - A)).
-rewrite (Z.mul_comm (B + - A)).
-rewrite (Z.mul_assoc X1).
-rewrite (Z.mul_comm b0).
-rewrite <- Z.add_assoc.
-rewrite <- Zmult_plus_distr_l.
-rewrite <- p.
-rewrite Zmult_1_l.
-fold (B - A)%Z in |- *.
-apply Zplus_minus.
-unfold Zminus in |- *.
-rewrite Zopp_plus_distr.
-rewrite Zplus_comm.
-rewrite Z.opp_involutive.
-reflexivity.
-assert (x1 * x2 > 0).
-replace 0 with (0 * x2).
-unfold gt in |- *.
-rewrite Nat.mul_comm.
-rewrite (Nat.mul_comm x1).
-induction x2 as [| x2 Hrecx2].
-elim (lt_n_O _ pb).
-apply mult_S_lt_compat_l.
-fold (x1 > 0) in |- *.
-eapply ltgt1.
-apply pa.
-auto.
-induction (chRem1 _ H2 d).
-induction p0 as (H3, H4).
-induction x as (a1, b1).
-exists b1.
-split.
-apply H3.
-cbv beta iota zeta delta [snd fst] in H4.
-cbv beta iota zeta delta [snd fst] in p.
-split.
-induction (modulo x1 (ltgt1 a x1 pa) b1).
-induction x as (a2, b2).
-simpl in |- *.
-induction p0 as (H5, H6).
-cbv beta iota zeta delta [snd fst] in H5.
-rewrite H5 in H4.
-unfold d in H4.
-unfold A, X1 in H4.
-apply Z_of_nat_inj. 
-eapply chRem2.
-replace 0%Z with (Z.of_nat 0).
-apply Znat.inj_le.
-apply le_O_n.
-auto.
-replace 0%Z with (Z.of_nat 0).
-apply Znat.inj_le.
-apply le_O_n.
-auto.
-apply Znat.inj_lt.
-apply pa.
-apply Znat.inj_lt.
-apply H6.
-rewrite Znat.inj_plus in H4.
-repeat rewrite Znat.inj_mult in H4.
-symmetry  in |- *.
-rewrite (Zplus_comm (Z.of_nat a)) in H4.
-rewrite Zplus_assoc in H4.
-rewrite Z.mul_assoc in H4.
-rewrite (Z.mul_comm a1) in H4.
-rewrite <- (Z.mul_assoc (Z.of_nat x1)) in H4.
-rewrite <- Zmult_plus_distr_r in H4.
-rewrite (Z.mul_comm (Z.of_nat x1)) in H4.
-apply H4.
-induction (modulo x2 (ltgt1 b x2 pb) b1).
-simpl in |- *.
-induction x as (a2, b2).
-cbv beta iota zeta delta [snd fst] in p0.
-induction p0 as (H5, H6).
-rewrite H5 in H4.
-rewrite H1 in H4.
-unfold B, X2 in H4.
-apply Z_of_nat_inj. 
-eapply chRem2.
-replace 0%Z with (Z.of_nat 0).
-apply Znat.inj_le.
-apply le_O_n.
-auto.
-replace 0%Z with (Z.of_nat 0).
-apply Znat.inj_le.
-apply le_O_n.
-auto.
-apply Znat.inj_lt.
-apply pb.
-apply Znat.inj_lt.
-apply H6.
-rewrite Znat.inj_plus in H4.
-repeat rewrite Znat.inj_mult in H4.
-symmetry  in |- *.
-rewrite (Zplus_comm (Z.of_nat b)) in H4.
-rewrite Z.mul_assoc in H4.
-rewrite Zplus_assoc in H4.
-rewrite (Z.mul_comm a1) in H4.
-rewrite (Z.mul_comm (Z.of_nat x2)) in H4.
-rewrite <- Zmult_plus_distr_l in H4.
-apply H4.
+  intros ? ? H a b pa pb H0.
+  destruct (gcd_lincomb_nat_dec _ _ _ (ltgt1 _ _ pa) H)
+    as [(a0,b0) p]. 
+  set (A := Z.of_nat a) in *.
+  set (B := Z.of_nat b) in *.
+  set (X1 := Z.of_nat x1) in *.
+  set (X2 := Z.of_nat x2) in *.
+  set (y := (a0 * (B - A))%Z) in *.
+  set (z := (b0 * (A - B))%Z) in *.
+  set (d := (A + X1 * y)%Z) in *.
+  assert (d = (B + X2 * z)%Z).
+  unfold d in |- *; simpl in p.
+  apply minus1 with (X2 * z)%Z.
+  rewrite (Z.add_comm B).
+  rewrite Zminus_plus.
+  unfold z in |- *.
+  replace (A - B)%Z with (- (B - A))%Z.
+  unfold Zminus in |- *.
+  rewrite (Z.mul_comm b0).
+  rewrite Zopp_mult_distr_l_reverse.
+  rewrite (Z.mul_comm X2).
+  rewrite Zopp_mult_distr_l_reverse.
+  rewrite Z.opp_involutive.
+  unfold y in |- *.
+  rewrite <- (Z.mul_assoc (B + - A)).
+  rewrite (Z.mul_comm (B + - A)).
+  rewrite (Z.mul_assoc X1).
+  rewrite (Z.mul_comm b0).
+  rewrite <- Z.add_assoc.
+  rewrite <- Zmult_plus_distr_l.
+  rewrite <- p.
+  rewrite Z.mul_1_l.
+  fold (B - A)%Z in |- *.
+  apply Zplus_minus.
+  unfold Zminus in |- *.
+  rewrite Zopp_plus_distr.
+  rewrite Z.add_comm.
+  rewrite Z.opp_involutive.
+  reflexivity.
+  assert (H2: x1 * x2 > 0).
+  replace 0 with (0 * x2).
+  unfold gt in |- *.
+  rewrite Nat.mul_comm.
+  rewrite (Nat.mul_comm x1).
+  induction x2 as [| x2 Hrecx2].
+  elim (lt_n_O _ pb).
+  apply mult_S_lt_compat_l.
+  fold (x1 > 0) in |- *.
+  eapply ltgt1.
+  apply pa.
+  auto.
+  destruct (chRem1 _ H2 d) as [(a1, b1) [H3 H4]].
+  exists b1; split.
+  apply H3.
+  cbv beta iota zeta delta [snd fst] in H4, p. 
+  split.
+  induction (modulo x1 (ltgt1 a x1 pa) b1).
+  induction x as (a2, b2).
+  simpl in |- *.
+  induction p0 as (H5, H6).
+  cbv beta iota zeta delta [snd fst] in H5.
+  rewrite H5 in H4.
+  unfold d in H4.
+  unfold A, X1 in H4.
+  apply Z_of_nat_inj. 
+  eapply chRem2.
+  replace 0%Z with (Z.of_nat 0).
+  apply Znat.inj_le.
+  apply le_O_n.
+  auto.
+  replace 0%Z with (Z.of_nat 0).
+  apply Znat.inj_le.
+  apply le_O_n.
+  auto.
+  apply Znat.inj_lt.
+  apply pa.
+  apply Znat.inj_lt.
+  apply H6.
+  rewrite Znat.inj_plus in H4.
+  repeat rewrite Znat.inj_mult in H4.
+  symmetry  in |- *.
+  rewrite (Z.add_comm (Z.of_nat a)) in H4.
+  rewrite Z.add_assoc in H4.
+  rewrite Z.mul_assoc in H4.
+  rewrite (Z.mul_comm a1) in H4.
+  rewrite <- (Z.mul_assoc (Z.of_nat x1)) in H4.
+  rewrite <- Zmult_plus_distr_r in H4.
+  rewrite (Z.mul_comm (Z.of_nat x1)) in H4.
+  apply H4.
+  induction (modulo x2 (ltgt1 b x2 pb) b1).
+  simpl in |- *.
+  induction x as (a2, b2).
+  cbv beta iota zeta delta [snd fst] in p0.
+  induction p0 as (H5, H6).
+  rewrite H5 in H4.
+  rewrite H1 in H4.
+  unfold B, X2 in H4.
+  apply Z_of_nat_inj. 
+  eapply chRem2.
+  replace 0%Z with (Z.of_nat 0).
+  apply Znat.inj_le.
+  apply le_O_n.
+  auto.
+  replace 0%Z with (Z.of_nat 0).
+  apply Znat.inj_le.
+  apply le_O_n.
+  auto.
+  apply Znat.inj_lt.
+  apply pb.
+  apply Znat.inj_lt.
+  apply H6.
+  rewrite Znat.inj_plus in H4.
+  repeat rewrite Znat.inj_mult in H4.
+  symmetry  in |- *.
+  rewrite (Z.add_comm (Z.of_nat b)) in H4.
+  rewrite Z.mul_assoc in H4.
+  rewrite Z.add_assoc in H4.
+  rewrite (Z.mul_comm a1) in H4.
+  rewrite (Z.mul_comm (Z.of_nat x2)) in H4.
+  rewrite <- Zmult_plus_distr_l in H4.
+  apply H4.
 Qed.
 
 Lemma chineseRemainderTheorem :
@@ -579,27 +529,17 @@ Lemma chineseRemainderTheorem :
  a = snd (proj1_sig (modulo x1 (ltgt1 _ _ pa) y)) /\
  b = snd (proj1_sig (modulo x2 (ltgt1 _ _ pb) y))}.
 Proof.
-intros.
-induction (le_lt_dec a b).
-apply chineseRemainderTheoremHelp.
-assumption.
-assumption.
-assert (b <= a).
-apply lt_le_weak.
-assumption.
-assert (CoPrime x2 x1).
-apply coPrimeSym.
-assumption.
-induction (chineseRemainderTheoremHelp _ _ H1 b a pb pa H0).
-induction p as (H2, H3).
-induction H3 as (H3, H4).
-exists x.
-split.
-rewrite Nat.mul_comm.
-assumption.
-split.
-assumption.
-assumption.
+  intros ? ? H a b pa pb.
+  destruct (le_lt_dec a b).
+  - apply chineseRemainderTheoremHelp; assumption.
+  - assert (H0: b <= a) by (now apply lt_le_weak).
+    assert (H1: CoPrime x2 x1) by (now apply coPrimeSym).
+    induction (chineseRemainderTheoremHelp _ _ H1 b a pb pa H0)
+                as [x [H2 [H3 H4]]].
+    exists x.
+    split.
+    +  now rewrite Nat.mul_comm.
+    + split; assumption.
 Qed.
 
 Fixpoint prod (n:nat) (x: nat -> nat) :=
@@ -616,7 +556,7 @@ Proof.
   - split.
     + exists 1; trivial.
     + exists (Z.abs_nat (Z.of_nat a)); now rewrite mult_1_l.
-  - intros e [H H0]; apply divide_le; [apply le_n| apply H].
+  - intros e [H H0]; apply divide_le1; [apply le_n| apply H].
 Qed.
 
 Lemma coPrimeMult3 (a b c: nat):
@@ -687,21 +627,11 @@ Lemma prodBig1 :
  forall (n : nat) (x : nat -> nat),
  (forall z : nat, z < n -> x z > 0) -> prod n x > 0.
 Proof.
-intro.
-induction n as [| n Hrecn].
-intros.
-simpl in |- *.
-apply gt_Sn_n.
-intros.
-simpl in |- *.
-apply Nat.mul_pos_pos.
-apply H.
-apply lt_n_Sn.
-apply Hrecn.
-intros.
-apply H.
-apply lt_S.
-assumption.
+  induction n as [| n Hrecn].
+  - intros x H; simpl in |- *; apply gt_Sn_n.
+  - intros x H; simpl in |- *; apply Nat.mul_pos_pos.
+    + apply H; apply lt_n_Sn.
+    + apply Hrecn; intros; now apply H, lt_S.
 Qed.
 
 Lemma sameProd :
@@ -1105,8 +1035,8 @@ Proof.
   simple induction n.
   - intros x i H; elim (lt_n_O _ H).
   - intros; simpl in |- *; induction (le_lt_or_eq i n0).
-    + eapply le_trans; [now apply H | apply le_max_r].
-    + rewrite H1; apply le_max_l.
+    + eapply le_trans; [now apply H | apply Nat.le_max_r].
+    + rewrite H1; apply Nat.le_max_l.
     + now apply lt_n_Sm_le.
 Qed.
 
@@ -1148,7 +1078,7 @@ Proof.
   { intros; unfold x in |- *; eapply coPrimeSeq.
     - eapply Pocklington.divides.div_trans.
       + unfold factorial in |- *; apply divProd2.
-        apply le_max_l.
+        apply Nat.le_max_l.
       + unfold c, factorial in |- *.
         apply Pocklington.divides.div_refl.
     - assumption.
@@ -1166,7 +1096,7 @@ Proof.
         apply le_trans with (maxBeta n y).
         apply maxBetaLe.
         assumption.
-        apply le_max_r.
+        apply Nat.le_max_r.
         generalize (max n (maxBeta n y)).
         intros.
         induction n0 as [| n0 Hrecn0].
@@ -1221,9 +1151,8 @@ Proof.
   intros.
   rewrite (H3 z H1).
   induction (modulo (x z) (ltgt1 (y z) (x z) (H0 z H1)) x0).
-  replace (snd (x0, c)) with c.
-  replace (fst (x0, c)) with x0.
-  induction (modulo (coPrimeBeta z c) (gtBeta z c) x0) as [x2 p0].
+  simpl fst; simpl snd.
+  destruct (modulo (coPrimeBeta z c) (gtBeta z c) x0) as [x2 p0].
   simpl in |- *.
   eapply uniqueRem.
   apply gtBeta.
@@ -1232,6 +1161,4 @@ Proof.
   apply p.
   exists (fst x2).
   apply p0.
-  auto.
-  auto.
 Qed.
