@@ -12,6 +12,17 @@ From Coqprime  Require Import NatAux ZCAux ZCmisc ZSum Pmod Ppow.
 
 (** * Compatibility lemmas (provisional) *)
 
+(* Compatibility witrh Pocklington.divides.ZDivides *)
+
+Definition ZDivides (x y: Z) := 
+  exists z : Z, y = (x * z)%Z.
+
+Lemma ZDivides_compat x y : ZDivides x y <-> Z.divide x y.
+Proof. 
+ split; intros [q Hq]; exists q; now rewrite Z.mul_comm. 
+Qed.
+
+
 (** more general than [NatAux] lemma *)
 
 Lemma divide_le1 d n : (0 < n)%nat ->  divide d n -> (d <= n)%nat.
@@ -257,4 +268,119 @@ subst y.
 
 
 Abort.   
+ *)
+
+Search Nat.gcd. 
+
+
+Lemma divide_Nat_compat (x y: nat) :
+  divide x y <-> Nat.divide x y. 
+Proof. 
+  split; intros [q Hq]; exists q; now rewrite Nat.mul_comm.
+Qed.
+
+
+Lemma gcd_compat (a b c: nat):
+  Zis_gcd (Z.of_nat a) (Z.of_nat b) (Z.of_nat (Nat.gcd a b)).
+Proof.
+split. 
+- apply divZdiv_compat. 
+  specialize (Nat.gcd_divide_l a b) as [q Hq].
+  exists q. now rewrite Nat.mul_comm.
+- apply divZdiv_compat. 
+  specialize (Nat.gcd_divide_r a b) as [q Hq].
+  exists q. now rewrite Nat.mul_comm.
+- Search Nat.gcd.
+  intros x H0 H1.
+(*  Search Nat.gcd. About divZdiv_compat.
+  replace x with (Z.of_nat (Z.abs_nat x)).
+  apply divZdiv_compat. 
+  
+  Search  Nat.gcd.
+  rewrite divide_Nat_compat.
+  apply Nat.gcd_greatest.
+   rewrite <- divide_Nat_compat.
+   Search divide (_ | _).
+    replace a with (Z.abs_nat (Z.of_nat a)).
+    apply zdivdiv_compat. auto.
+    Search Z.abs_nat Z.of_nat. 
+Locate Zabs2Nat.id. 
+now rewrite  <- Zabs2Nat.id.
+  rewrite <- divide_Nat_compat.
+   Search divide (_ | _).
+    replace b with (Z.abs_nat (Z.of_nat b)).
+    apply zdivdiv_compat. auto.
+    Search Z.abs_nat Z.of_nat. 
+Locate Zabs2Nat.id. 
+now rewrite  <- Zabs2Nat.id.
+ Search Z.abs_nat Z.of_nat. 
+rewrite Zabs2Nat.id_abs.
+
+
+  [qa Ha] [qb Hb].
+apply divZdiv_compat. 
+specialize (Nat.gcd_divide_r a b) as [q Hq].
+exists q. now rewrite Nat.mul_comm.
+
+Search Nat.gcd gcd.
+ *)
+
+Abort.   
+(* todo
+
+Lemma gcd_lincomb_nat_dec :
+ forall x y d : nat,
+ x > 0 ->
+ Pocklington.gcd.gcd (Z.of_nat x) (Z.of_nat y) d ->
+ {a : Z * Z |
+   Z.of_nat d = (Z.of_nat x * fst a + Z.of_nat y * snd a)%Z}.
+Proof.
+   intro x; apply (lt_wf_rec x); intros X IH. intros y d H H0.
+   elim (modulo X H y).
+   intro z;   elim z.
+   intros q r;  clear z; simpl in |- *.   
+   case r.
+   (* case r = 0 *)
+   - intros; induction p as (H1, H2).
+     rewrite <- plus_n_O in H1.
+     exists (1%Z, 0%Z).
+     simpl fst; simpl snd. 
+     rewrite <- Zmult_0_r_reverse;  rewrite <- Zplus_0_r_reverse.
+     rewrite Z.mul_comm. rewrite Zmult_1_l.
+     apply Znat.inj_eq.
+     apply (Pocklington.gcd.euclid_gcd d X (Z.of_nat y)
+              (Z.of_nat X) (Z.of_nat q) 0).
+     rewrite <- Zplus_0_r_reverse; rewrite <- Znat.inj_mult;
+       apply Znat.inj_eq; assumption.
+     apply Pocklington.gcd.gcd_sym; assumption.
+     apply Pocklington.gcd.gcd_0_l; assumption.
+   - (* case r > 0 *)
+   intros r1 [H1 H2].
+   elim (IH (S r1) H2 X d).
+   + intro z; elim z.
+     intros delta gamma; clear z.
+     simpl fst; simpl snd.
+   intros p. 
+   exists ((gamma - Z.of_nat q * delta)%Z, delta).
+   simpl fst; simpl snd.
+   rewrite p, H1.
+   unfold Zminus in |- *; rewrite Zmult_plus_distr_r.
+   rewrite Znat.inj_plus; rewrite Zmult_plus_distr_l.
+   rewrite Znat.inj_mult; rewrite <- Zopp_mult_distr_l_reverse.
+   rewrite (Z.mul_assoc (Z.of_nat X)).
+   rewrite (Z.mul_comm (Z.of_nat X) (- Z.of_nat q)).
+   rewrite Zopp_mult_distr_l_reverse.
+   rewrite Zopp_mult_distr_l_reverse.
+   rewrite <- (Z.add_assoc (Z.of_nat X * gamma)).
+   rewrite <- Znat.inj_mult.
+   rewrite (Z.add_assoc (- (Z.of_nat (q * X) * delta))). 
+   rewrite Zplus_opp_l. simpl in |- *. apply Z.add_comm.
+   + auto with arith. 
+   +  apply
+       (Pocklington.gcd.euclid_gcd1 d (Z.of_nat y) (Z.of_nat X)
+          (Z.of_nat q) (Z.of_nat (S r1))).
+      * apply Pocklington.gcd.gcd_sym;  assumption.
+      * rewrite <- Znat.inj_mult; rewrite <- Znat.inj_plus;
+          apply Znat.inj_eq; assumption.
+Qed.
  *)

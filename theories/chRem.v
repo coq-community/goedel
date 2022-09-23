@@ -18,10 +18,7 @@ Require Export compatCoqPrime.
 
 (* To remove when unused *)
 
-Lemma ZDivides_compat x y : divides.ZDivides x y <-> Z.divide x y.
-Proof. 
- split; intros [q Hq]; exists q; now rewrite Z.mul_comm. 
-Qed.
+
 
 
 Print Pocklington.gcd.gcd.
