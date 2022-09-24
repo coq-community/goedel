@@ -34,10 +34,11 @@ without induction) that is complete is inconsistent.
 - Coq-community maintainer(s):
   - Pierre Castéran ([**@Casteran**](https://github.com/Casteran))
 - License: [MIT License](LICENSE)
-- Compatible Coq versions: 8.11 or later
+- Compatible Coq versions: 8.13 or later
 - Additional dependencies:
   - [Hydra Battles](https://github.com/coq-community/hydra-battles)
   - [Pocklington](https://github.com/coq-community/pocklington)
+  - [CoqPrime](https://github.com/thery/coqprime)
 - Coq namespace: `Goedel`
 - Related publication(s):
   - [Essential Incompleteness of Arithmetic Verified by Coq](https://arxiv.org/abs/cs/0505034) doi:[10.1007/11541868_16](https://doi.org/10.1007/11541868_16)

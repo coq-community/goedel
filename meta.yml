@@ -36,8 +36,8 @@ license:
   identifier: MIT
 
 supported_coq_versions:
-  text: 8.11 or later
-  opam: '{(>= "8.11" & < "8.17~") | (= "dev")}'
+  text: 8.13 or later
+  opam: '{(>= "8.13" & < "8.17~") | (= "dev")}'
 
 tested_coq_opam_versions:
 - version: dev
@@ -45,15 +45,13 @@ tested_coq_opam_versions:
 - version: '8.15'
 - version: '8.14'
 - version: '8.13'
-- version: '8.12'
-- version: '8.11'
 
 ci_extra_dev: true
 
 dependencies:
 - opam:
     name: coq-hydra-battles
-    version: '{>= "0.4"}'
+    version: '{= "dev"}'
   description: |-
     [Hydra Battles](https://github.com/coq-community/hydra-battles)
 - opam:
@@ -61,6 +59,11 @@ dependencies:
     version: '{>= "8.12.0"}'
   description: |-
     [Pocklington](https://github.com/coq-community/pocklington)
+- opam:
+    name: coq-coqprime
+    version: '{>= "1.2.0"}'
+  description: |-
+    [CoqPrime](https://github.com/thery/coqprime)
 
 namespace: Goedel
 

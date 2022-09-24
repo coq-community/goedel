@@ -1,5 +1,4 @@
 -R theories Goedel
--R ../hydra-battles/theories/ordinals  hydras
 
 theories/chRem.v
 theories/codeSysPrf.v
