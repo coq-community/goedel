@@ -1149,85 +1149,88 @@ Qed.
 
 Let projFormula (m : nat) : Formula := equal (var 0) (var (S m)).
 
+
 Remark projRepresentable :
  forall (n m : nat) (pr : m < n),
  Representable n (evalProjFunc n m pr) (projFormula m).
 Proof.
+  intros n m pr; unfold Representable in |- *.
+  split.
 intros.
-unfold Representable in |- *.
-split.
-intros.
-simpl in H.
-decompose sum H.
-rewrite <- H0.
-apply le_O_n.
-rewrite <- H1.
-apply lt_n_Sm_le.
-apply lt_n_S.
-auto.
-induction n as [| n Hrecn].
-elim (lt_n_O m pr).
-simpl in |- *.
-intros.
-induction (Nat.eq_dec m n).
-rewrite a0.
-clear a0 Hrecn pr m.
-induction n as [| n Hrecn].
-simpl in |- *.
-unfold projFormula in |- *.
-rewrite (subFormulaEqual LNN).
-simpl in |- *.
-apply iffRefl.
-simpl in |- *.
-intros.
-unfold projFormula in |- *.
-repeat rewrite (subFormulaEqual LNN).
-simpl in |- *.
-induction
- (match
-   match Nat.eq_dec n n with
-   | left e => left (f_equal_nat nat S n n e)
-   | right n0 => right (not_eq_S n n n0)
-   end
-  with
-  | left _ => _
-  | right _ => _
-  end).
-simpl in |- *.
-replace
- (fol.equal LNN (fol.var LNN 0)
-    (substituteTerm LNN (natToTerm a) (S n) (natToTerm a0))) with
- (substituteFormula LNN (equal (var 0) (var (S n))) (S n) (natToTerm a)).
-auto.
-rewrite (subFormulaEqual LNN).
-simpl in |- *.
-induction
- (match Nat.eq_dec n n with
- | left e => left (f_equal_nat nat S n n e)
- | right n0 => right (not_eq_S n n n0)
- end).
-rewrite subTermNil.
-reflexivity.
-apply closedNatToTerm.
-elim b.
-auto.
-elim b.
-auto.
-generalize
- match le_lt_or_eq m n (lt_n_Sm_le m n pr) with
- | or_introl l2 => l2
- | or_intror l2 => False_ind (m < n) (b l2)
- end.
-intros.
-apply RepresentableAlternate with (equal (var 0) (var (S m))).
-apply iffSym.
-apply (subFormulaNil LNN).
-simpl in |- *.
-unfold not in |- *; intros.
-decompose sum H.
-lia.
-auto. 
-eauto. Qed.
+  - simpl in H ; decompose sum H.
+    + rewrite <- H0.
+      apply le_O_n.
+    + rewrite <- H1.
+      apply lt_n_Sm_le.
+      apply lt_n_S.
+      auto.
+  - induction n as [| n Hrecn].
+    + elim (lt_n_O m pr).
+    + simpl in |- *.
+      intros a.
+      induction (Nat.eq_dec m n).
+      * rewrite a0.
+        clear a0 Hrecn pr m.
+        induction n as [| n Hrecn].
+        -- simpl in |- *.
+           unfold projFormula in |- *.
+           rewrite (subFormulaEqual LNN).
+           simpl in |- *.
+           apply iffRefl.
+        -- simpl in |- *.
+           intros a0.
+           unfold projFormula in |- *.
+           repeat rewrite (subFormulaEqual LNN).
+           simpl in |- *.
+           induction
+             (match
+                 match Nat.eq_dec n n with
+                 | left e => left (f_equal_nat nat S n n e)
+                 | right n0 => right (not_eq_S n n n0)
+                 end
+               with
+               | left _ => _
+               | right _ => _
+               end).
+           simpl in |- *.
+           replace
+             (fol.equal LNN (fol.var LNN 0)
+                (substituteTerm LNN (natToTerm a) (S n)
+                   (natToTerm a0)))
+             with
+             (substituteFormula LNN (equal (var 0)
+                                       (var (S n))) (S n)
+                (natToTerm a)).
+           ++ auto.
+           ++ rewrite (subFormulaEqual LNN); simpl in |- *.
+              induction
+                (match Nat.eq_dec n n with
+                 | left e => left (f_equal_nat nat S n n e)
+                 | right n0 => right (not_eq_S n n n0)
+                 end).
+              ** rewrite subTermNil.
+                 reflexivity.
+                 apply closedNatToTerm.
+              ** elim b; auto.
+           ++ elim b.
+              auto.
+      * generalize
+          match le_lt_or_eq m n (lt_n_Sm_le m n pr) with
+          | or_introl l2 => l2
+          | or_intror l2 => False_ind (m < n) (b l2)
+          end.
+        intros l.
+        apply RepresentableAlternate with (equal (var 0) (var (S m)));
+        eauto.
+        -- apply iffSym.
+           apply (subFormulaNil LNN).
+           simpl in |- *.
+           unfold not in |- *; intros.
+           decompose sum H.
+           lia.
+           auto. 
+Qed.
+
 
 Let composeSigmaFormula (n w m : nat) (A : Vector.t (Formula * naryFunc n) m)
   (B : Formula) : Formula :=
