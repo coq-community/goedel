@@ -230,6 +230,7 @@ Proof.
     apply H1.
 Qed.
 
+(** used in PRrepresentable *)
 Lemma modulo :
  forall b : nat,  b > 0 ->
  forall a : nat, {p : nat * nat | a = fst p * b + snd p /\ b > snd p}.
@@ -990,6 +991,7 @@ Proof.
 - auto.
 Qed.
 
+(** used in PRrepresentable *)
 Definition coPrimeBeta (z c : nat) : nat := S (c * S z).
 
 Lemma coPrimeSeq :
@@ -1014,6 +1016,7 @@ induction (nat_total_order _ _ H0) as [H3 | H3].
   + assumption.
 Qed.
 
+(** used in PRrepresentable *)
 Lemma gtBeta : forall z c : nat, coPrimeBeta z c > 0.
 Proof.
   unfold coPrimeBeta in |- *; intros; apply gt_Sn_O.
@@ -1057,6 +1060,7 @@ Proof.
     + assumption.
 Qed.
 
+(** used in PRrepresentable *)
 Theorem betaTheorem1 :
  forall (n : nat) (y : nat -> nat),
  {a : nat * nat |
@@ -1145,17 +1149,13 @@ Proof.
   }
   induction (chRem _ _ H _ H0) as [x0 [H2 H3]].
   exists (x0, c).
-  intros.
-  rewrite (H3 z H1).
+  intros z H1; rewrite (H3 z H1).
   induction (modulo (x z) (ltgt1 (y z) (x z) (H0 z H1)) x0).
   simpl fst; simpl snd.
   destruct (modulo (coPrimeBeta z c) (gtBeta z c) x0) as [x2 p0].
   simpl in |- *.
   eapply uniqueRem.
-  apply gtBeta.
-  unfold x in p.
-  exists (fst x1).
-  apply p.
-  exists (fst x2).
-  apply p0.
+  - apply gtBeta.
+  -  unfold x in p; exists (fst x1); apply p.
+  -  exists (fst x2);  apply p0.
 Qed.
