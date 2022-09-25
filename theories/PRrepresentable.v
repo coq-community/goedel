@@ -8,7 +8,7 @@ From hydras.Ackermann Require Import folLogic3.
 From hydras.Ackermann Require Import NN.
 From hydras.Ackermann Require Import NNtheory.
 From hydras.Ackermann Require Import primRec.
-Require (*Import*) chRem.
+Require Import chRem.
 From hydras.Ackermann Require Import expressible.
 From Coq Require Import Lists.List.
 From Coq Require Vector.
@@ -27,7 +27,7 @@ Let Representable_ext := Representable_ext NN.
 Definition beta (a z : nat) : nat :=
   snd
     (proj1_sig
-       (chRem.modulo (chRem.coPrimeBeta z (cPairPi1 a)) (chRem.gtBeta z (cPairPi1 a))
+       (modulo (coPrimeBeta z (cPairPi1 a)) (gtBeta z (cPairPi1 a))
           (cPairPi2 a))).
 
 Definition betaFormula : Formula :=
@@ -536,14 +536,14 @@ apply natNE.
 unfold not in |- *; intros; elim b.
 unfold beta in |- *.
 induction
- (chRem.modulo (chRem.coPrimeBeta a0 (cPairPi1 a)) (chRem.gtBeta a0 (cPairPi1 a)) (cPairPi2 a)).
+ (modulo (coPrimeBeta a0 (cPairPi1 a)) (gtBeta a0 (cPairPi1 a)) (cPairPi2 a)).
 induction x as (a1, b0).
 simpl in p.
 simpl in |- *.
 induction p as (H4, H5).
-unfold chRem.coPrimeBeta in H4.
+unfold coPrimeBeta in H4.
 rewrite plus_comm in H3.
-eapply chRem.uniqueRem.
+eapply uniqueRem.
 unfold gt in |- *.
 apply lt_O_Sn.
 exists n0.
@@ -574,7 +574,7 @@ apply Axm; right; constructor.
 apply impI.
 unfold beta in |- *.
 induction
- (chRem.modulo (chRem.coPrimeBeta a0 (cPairPi1 a)) (chRem.gtBeta a0 (cPairPi1 a)) (cPairPi2 a)).
+ (modulo (coPrimeBeta a0 (cPairPi1 a)) (gtBeta a0 (cPairPi1 a)) (cPairPi2 a)).
 induction x as (a1, b).
 simpl in |- *.
 simpl in p.
@@ -809,8 +809,8 @@ replace
 apply natLT.
 rewrite H1.
 apply le_lt_n_Sm.
-apply le_trans with (a1 * chRem.coPrimeBeta a0 (cPairPi1 a)).
-unfold  chRem.coPrimeBeta in |- *.
+apply le_trans with (a1 * coPrimeBeta a0 (cPairPi1 a)).
+unfold  coPrimeBeta in |- *.
 apply le_trans with (a1 * 1).
 rewrite mult_comm.
 simpl in |- *.
@@ -840,7 +840,7 @@ replace
  (Plus (natToTerm b)
     (Times (natToTerm a1)
        (Succ (Times (natToTerm (cPairPi1 a)) (Succ (natToTerm a0)))))).
-apply eqTrans with (natToTerm (a1 *  chRem.coPrimeBeta a0 (cPairPi1 a) + b)).
+apply eqTrans with (natToTerm (a1 *  coPrimeBeta a0 (cPairPi1 a) + b)).
 rewrite plus_comm.
 apply eqSym.
 eapply eqTrans.
@@ -853,7 +853,7 @@ apply eqSym.
 apply natTimes.
 apply eqTimes.
 apply eqRefl.
-unfold  chRem.coPrimeBeta in |- *.
+unfold  coPrimeBeta in |- *.
 simpl in |- *.
 apply eqSucc.
 replace (Succ (natToTerm a0)) with (natToTerm (S a0)).
@@ -3367,7 +3367,7 @@ apply (reduceAnd LNN).
 apply subFormulaMinimize; first [ discriminate | apply closedNatToTerm ].
 apply iffRefl.
 set (f := evalPrimRecFunc 0 g h) in *.
-induction ( chRem.betaTheorem1 (S a) f).
+induction (betaTheorem1 (S a) f).
 induction x as (a0, b).
 simpl in p.
 set (P := fun c : nat => forall z : nat, z < S a -> f z = beta c z) in *.
