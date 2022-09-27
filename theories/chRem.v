@@ -6,45 +6,40 @@ From Coq Require Import ZArith_dec.
 
 From Coqprime  Require Import NatAux ZCAux ZCmisc ZSum Pmod Ppow.
 
-(** * Compatibility lemmas (provisional) *)
+Definition CoPrime (a b : nat) := Zis_gcd (Z.of_nat a) (Z.of_nat b) 1%Z.
 
-(** more general than [NatAux] lemma *)
-
-Definition CoPrime (a b : nat) := (* done *)
-   Zis_gcd (Z.of_nat a) (Z.of_nat b) 1%Z.
-
-Lemma coPrimeSym (* done *) : forall a b : nat, CoPrime a b -> CoPrime b a.
+Lemma coPrimeSym: forall a b : nat, CoPrime a b -> CoPrime b a.
 Proof. intros. now apply Zis_gcd_sym. Qed.
 
-Lemma gcd_bezout_nat:
-  forall (x y d : nat),
+Lemma gcd_bezout_nat: forall (x y d : nat),
   (x > 0)%nat ->
   Zis_gcd (Z_of_nat x) (Z_of_nat y) (Z_of_nat d) ->
   Bezout (Z_of_nat x) (Z_of_nat y)  (Z_of_nat d) .
 Proof.
   intros x y d H H0; destruct (Zis_gcd_bezout (Z.of_nat x)
                               (Z.of_nat y) (Z.of_nat d) H0).
- exists u v; assumption.
+  exists u v; assumption.
 Qed.
 
-Lemma coPrimeMult : (* done *)
+Lemma coPrimeMult : 
   forall a b c : nat, CoPrime a b -> divide a (b * c) -> divide a c.
 Proof.
   intros ? ? ? H H0; unfold CoPrime in H.
   induction a as [| a _].
   - (* a = 0 *)
     induction H0 as (x, H0).
-    cbn in H0. rewrite Nat.eq_mul_0 in H0. (* b = O \/ c = O *)
+    cbn in H0; rewrite Nat.eq_mul_0 in H0. (* b = O \/ c = O *)
     destruct H0 as [H1 | H1].
-    + rewrite H1 in H. simpl in H.
+    + rewrite H1 in H; simpl in H.
       inversion H. clear H H0 H1 H2.
       assert (2 | 0). { exists 0. auto. }
       destruct (H3 _ H H). nia.
-    + rewrite H1. exists 0%nat. auto.
+    + rewrite H1; now exists 0%nat. 
   - assert (H1: (S a > 0)%nat) by apply gt_Sn_O.
-    pose (gcd_bezout_nat (S a) b 1 H1 H) as W. inversion W. clear W.
-    destruct H0 as [x1 H0].
-    assert (1 * Z.of_nat c = Z_of_nat (S a) * (u * Z.of_nat c + Z.of_nat x1 * v)).
+    pose (gcd_bezout_nat (S a) b 1 H1 H) as W.
+    inversion W; clear W; destruct H0 as [x1 H0].
+    assert (1 * Z.of_nat c =
+              Z_of_nat (S a) * (u * Z.of_nat c + Z.of_nat x1 * v)).
     { rewrite (Z.mul_comm (Z.of_nat (S a))).
       rewrite  Z.mul_add_distr_r.
       rewrite (Z.mul_comm (u * Z.of_nat c)).
@@ -68,7 +63,7 @@ Proof.
     repeat rewrite Zabs2Nat.id. destruct H4. exists (Z.to_nat x). lia.
 Qed.
 
-Lemma coPrimeMult2 : (* done *)
+Lemma coPrimeMult2 : 
   forall a b c : nat,
     CoPrime a b -> divide a c -> divide b c -> divide (a * b) c.
 Proof.
@@ -78,13 +73,13 @@ Proof.
   destruct H2 as [x0 H2]; exists x0; subst; ring.
 Qed.
 
-Lemma ltgt1 (* done *): forall a b : nat, (a < b -> b > 0)%nat. (* done *)
+Lemma ltgt1: forall a b : nat, (a < b -> b > 0)%nat. 
 Proof. lia. Qed.
 
-Lemma minus1 (* done *) : forall a b c : Z, (a - c)%Z = (b - c)%Z -> a = b.
+Lemma minus1: forall a b c : Z, (a - c)%Z = (b - c)%Z -> a = b.
 Proof. lia. Qed.
 
-Lemma chRem2 : (* done *)
+Lemma chRem2 : 
   forall b1 r1 b2 r2 q : Z,
     (0 <= r1)%Z ->
     (0 <= r2)%Z ->
@@ -184,7 +179,7 @@ Qed.
 
 Open Scope nat_scope. 
 
-Lemma uniqueRem : (* done *)
+Lemma uniqueRem :
  forall r1 r2 b : nat,
  b > 0 ->
  forall a : nat,
@@ -215,7 +210,7 @@ Proof.
 Qed.
 
 
-Lemma chRem1 : (* done *)
+Lemma chRem1 : 
  forall b : nat,  b > 0 -> forall a : Z,
      {p : Z * nat | snd p < b /\
                       Z.of_nat (snd p) = (fst p * Z.of_nat b + a)%Z}.
@@ -706,7 +701,8 @@ Qed.
 
 Lemma chRem :
  forall (n : nat) (x : nat -> nat),
- (forall z1 z2 : nat, z1 < n -> z2 < n -> z1 <> z2 -> CoPrime (x z1) (x z2)) ->
+   (forall z1 z2 : nat, z1 < n -> z2 < n -> z1 <> z2 ->
+                        CoPrime (x z1) (x z2)) ->
  forall (y : nat -> nat) (py : forall z : nat, z < n -> y z < x z),
  {a : nat |
  a < prod n x /\
@@ -838,7 +834,8 @@ Proof.
   + intros. destruct H. assert (Z.of_nat n = Z.of_nat q * Z.of_nat x)%Z by lia.
     assert (n = 0 \/ 0 < n) by lia. destruct H3.
     - lia.
-    - assert (1 < q < n \/ q = 1 \/ n <= q) by lia. destruct H4 as [H4 | [H4 | H4]].
+    - assert (1 < q < n \/ q = 1 \/ n <= q) by lia.
+      destruct H4 as [H4 | [H4 | H4]].
       * assert (1 <= Z.of_nat q < Z.of_nat n)%Z by lia.
         pose proof (H1 _ H5). subst. exfalso.
         assert (1 < x) by nia. unfold rel_prime in H6.
@@ -1203,3 +1200,4 @@ Proof.
   exists (fst x2).
   apply p0.
 Qed.
+
