@@ -8,5 +8,5 @@ theories/goedel2.v
 theories/rosserPA.v
 theories/rosser.v
 theories/PRrepresentable.v
-theories/tryCoqPrime.v
+
 
