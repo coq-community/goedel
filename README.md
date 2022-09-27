@@ -37,7 +37,6 @@ without induction) that is complete is inconsistent.
 - Compatible Coq versions: 8.13 or later
 - Additional dependencies:
   - [Hydra Battles](https://github.com/coq-community/hydra-battles)
-  - [Pocklington](https://github.com/coq-community/pocklington)
   - [CoqPrime](https://github.com/thery/coqprime)
 - Coq namespace: `Goedel`
 - Related publication(s):
