@@ -1,5 +1,3 @@
-Set Apply With Renaming.
-
 From hydras.Ackermann Require Import primRec.
 From hydras.Ackermann Require Import cPair.
 From Coq Require Import Arith.

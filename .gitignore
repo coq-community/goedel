@@ -9,4 +9,6 @@ _build
 *.vio
 *.vok
 *.vos
+*.v#
 .lia.cache
+.nia.cache
