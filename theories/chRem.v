@@ -9,6 +9,7 @@ From Coqprime  Require Import NatAux ZCAux ZCmisc ZSum Pmod Ppow.
 Open Scope nat_scope.
 
 (* *  Compatibility Lemmas (to remove someday)
+
    These lemmas are deprecated since 8.16. 
    We re-introduce them, since they occur in non-trivial terms in the 
    original proof scripts.
@@ -36,6 +37,47 @@ Proof. lia. Qed.
 Lemma minus1: forall a b c : Z, (a - c)%Z = (b - c)%Z -> a = b.
 Proof. lia. Qed.
 
+Lemma minusS : forall a b : nat, b - a = S b - S a.
+Proof. lia. Qed.
+
+Lemma div_trans (p q r: nat) : divide p q -> divide q r -> divide p r.
+Proof. intros [x Hx] [y Hy]; exists (x * y); lia. Qed.
+
+Lemma div_refl p : divide p p.
+Proof. exists 1; now rewrite Nat.mul_1_r. Qed.
+
+Fixpoint prod (n:nat) (x: nat -> nat) :=
+  match n with
+    O => 1%nat
+  | S p => x p * prod p x
+  end.
+
+Lemma prodBig1 :
+ forall (n : nat) (x : nat -> nat),
+ (forall z : nat, z < n -> x z > 0) -> prod n x > 0.
+Proof.
+  induction n as [| n Hrecn].
+  - intros x H; simpl in |- *; apply Nat.lt_succ_diag_r.
+  - intros x H; simpl in |- *; apply Nat.mul_pos_pos.
+    + apply H; apply Nat.lt_succ_diag_r.
+    + apply Hrecn; intros; now apply H, Nat.lt_lt_succ_r.
+Qed.
+
+Lemma sameProd :
+ forall (n : nat) (x1 x2 : nat -> nat),
+ (forall z : nat, z < n -> x1 z = x2 z) -> prod n x1 = prod n x2.
+Proof.
+induction n as [| n Hrecn].
+- intros; reflexivity. 
+- intros x1 x2 H; simpl in |- *; replace (x1 n) with (x2 n).
+  + f_equal; auto.
+  + rewrite (H n); auto. 
+Qed.
+
+Definition factorial (n : nat) : nat := prod n S.
+
+
+
 (** *  Relative primality *)
 
 (** A [nat] version of [rel-prime] *)
@@ -51,15 +93,15 @@ Lemma gcd_bezout_nat: forall (x y d : nat),
   Bezout (Z_of_nat x) (Z_of_nat y)  (Z_of_nat d) .
 Proof.
   intros x y d H H0; destruct (Zis_gcd_bezout (Z.of_nat x)
-                              (Z.of_nat y) (Z.of_nat d) H0).
-  exists u v; assumption.
+                                 (Z.of_nat y) (Z.of_nat d) H0)
+                              as [u v ?]; now exists u v.
 Qed.
 
 Lemma coPrimeMult : 
   forall a b c : nat, CoPrime a b -> divide a (b * c) -> divide a c.
 Proof.
   intros ? ? ? H H0; unfold CoPrime in H.
-  induction a as [| a _].
+  destruct a as [| a].
   - (* a = 0 *)
     induction H0 as (x, H0).
     cbn in H0; rewrite Nat.eq_mul_0 in H0. (* b = O \/ c = O *)
@@ -198,12 +240,8 @@ Proof.
     rewrite <- Zplus_0_r_reverse.
     reflexivity.
   }
-  elim (Zle_not_lt q (r1 - r2)).
-  assumption.
-  assumption.
+  destruct (Zle_not_lt q (r1 - r2)); assumption.
 Qed.
-
-
 
 Lemma uniqueRem :
  forall r1 r2 b : nat,
@@ -216,6 +254,7 @@ Proof.
   assert (x = x0). { nia. } nia.
 Qed.
 
+(** Imported by PRRepresentable *)
 Lemma modulo :
  forall b : nat,  b > 0 ->
  forall a : nat, {p : nat * nat | a = fst p * b + snd p /\ b > snd p}.
@@ -315,7 +354,9 @@ Proof.
 Qed.
 
 Lemma euclid_gcd1 :
- forall (d : nat) (x y q r : Z), Zis_gcd x y (Z.of_nat d) -> x = (q * y + r)%Z -> Zis_gcd r y (Z.of_nat d).
+  forall (d : nat) (x y q r : Z),
+    Zis_gcd x y (Z.of_nat d) -> x = (q * y + r)%Z ->
+    Zis_gcd r y (Z.of_nat d).
 Proof.
   intros. rewrite H0 in H. clear H0 x.
   replace (q * y + r)%Z with (r - (- q) * y)%Z in H by lia.
@@ -324,7 +365,8 @@ Qed.
 
 Lemma euclid_gcd :
  forall (d1 d2 : nat) (x y q r : Z),
- x = (q * y + r)%Z -> Zis_gcd x y (Z.of_nat d1) -> Zis_gcd r y (Z.of_nat d2) -> d1 = d2.
+   x = (q * y + r)%Z -> Zis_gcd x y (Z.of_nat d1) ->
+   Zis_gcd r y (Z.of_nat d2) -> d1 = d2.
 Proof.
    intros. pose proof (euclid_gcd1 d1 x y q r H0 H).
    pose proof (Zis_gcd_unique r y _ _ H2 H1). lia.
@@ -530,13 +572,7 @@ Proof.
     + split; assumption.
 Qed.
 
-Fixpoint prod (n:nat) (x: nat -> nat) :=
-  match n with
-    O => 1%nat
-  | S p => x p * prod p x
-  end.
 
-Definition factorial (n : nat) : nat := prod n S.
 
 Lemma coPrime1 : forall a : nat, CoPrime 1 a.
 Proof.
@@ -596,27 +632,7 @@ Qed.
 
 
 
-Lemma prodBig1 :
- forall (n : nat) (x : nat -> nat),
- (forall z : nat, z < n -> x z > 0) -> prod n x > 0.
-Proof.
-  induction n as [| n Hrecn].
-  - intros x H; simpl in |- *; apply Nat.lt_succ_diag_r.
-  - intros x H; simpl in |- *; apply Nat.mul_pos_pos.
-    + apply H; apply Nat.lt_succ_diag_r.
-    + apply Hrecn; intros; now apply H, Nat.lt_lt_succ_r.
-Qed.
 
-Lemma sameProd :
- forall (n : nat) (x1 x2 : nat -> nat),
- (forall z : nat, z < n -> x1 z = x2 z) -> prod n x1 = prod n x2.
-Proof.
-induction n as [| n Hrecn].
-- intros; reflexivity. 
-- intros x1 x2 H; simpl in |- *; replace (x1 n) with (x2 n).
-  + f_equal; auto.
-  + rewrite (H n); auto. 
-Qed.
 
 Lemma coPrimeProd :
  forall (n : nat) (x : nat -> nat),
@@ -784,7 +800,6 @@ Proof.
     rewrite Nat.mul_comm.
     assumption.
     intros.
-    About Nat.lt_eq_cases.
     assert (lezn : z <= n) by lia.
     rewrite Nat.lt_eq_cases in lezn. destruct lezn.
    
@@ -836,8 +851,6 @@ Proof.
       assumption.
 Qed.
 
-Lemma minusS : forall a b : nat, b - a = S b - S a.
-Proof. lia. Qed.
 
 Definition Prime (n : nat) : Prop :=
   n > 1 /\ (forall q : nat, divide q n -> q = 1 \/ q = n).
@@ -978,17 +991,7 @@ Proof.
   + right. destruct H1. exists (Z.to_nat x). nia.
 Qed.
 
-Lemma div_trans :
- forall p q r : nat, divide p q -> divide q r -> divide p r.
-Proof.
-  intros. destruct H, H0. exists (x * x0). lia.
-Qed.
 
-Lemma div_refl :
-  forall p, divide p p.
-Proof.
-  exists 1. lia.
-Qed.
 
 Lemma coPrimeSeqHelp :
  forall c i j n : nat,
@@ -1064,6 +1067,7 @@ Proof.
 - auto.
 Qed.
 
+(** Imported by PRRepresentable *)
 Definition coPrimeBeta (z c : nat) : nat := S (c * S z).
 
 Lemma coPrimeSeq :
@@ -1088,6 +1092,7 @@ Proof.
     + assumption.
 Qed.
 
+(** Imported by PRRepresentable *)
 Lemma gtBeta : forall z c : nat, coPrimeBeta z c > 0.
 Proof.
   unfold coPrimeBeta in |- *; intros; apply Nat.lt_0_succ.
@@ -1131,6 +1136,7 @@ Proof.
     + rewrite H0; exists 1; lia.
 Qed.
 
+(** Imported by PRRepresentable *)
 Theorem betaTheorem1 :
  forall (n : nat) (y : nat -> nat),
  {a : nat * nat |
