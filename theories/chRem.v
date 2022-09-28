@@ -6,6 +6,40 @@ From Coq Require Import ZArith_dec.
 
 From Coqprime  Require Import NatAux ZCAux ZCmisc ZSum Pmod Ppow.
 
+Open Scope nat_scope.
+
+(* *  Compatibility Lemmas (to remove someday)
+   These lemmas are deprecated since 8.16. 
+   We re-introduce them, since they occur in non-trivial terms in the 
+   original proof scripts.
+
+ *)
+
+Lemma mult_O_le : forall n m : nat, m = 0%nat \/ (n <= m * n)%nat.
+Proof.
+   destruct m. 
+   - now left. 
+   - right; replace n with (1 * n)%nat  at 1. 
+     apply Nat.mul_le_mono_r; auto with arith. 
+     now rewrite Nat.mul_1_l. 
+Qed. 
+
+
+Lemma le_plus_trans (n m p : nat) : (n <= m)%nat -> (n <= m + p)%nat.
+Proof. 
+ intro H; apply Nat.le_trans with m; [assumption | apply Nat.le_add_r].
+Qed.
+
+Lemma ltgt1: forall a b : nat, (a < b -> b > 0)%nat. 
+Proof. lia. Qed.
+
+Lemma minus1: forall a b c : Z, (a - c)%Z = (b - c)%Z -> a = b.
+Proof. lia. Qed.
+
+(** *  Relative primality *)
+
+(** A [nat] version of [rel-prime] *)
+
 Definition CoPrime (a b : nat) := Zis_gcd (Z.of_nat a) (Z.of_nat b) 1%Z.
 
 Lemma coPrimeSym: forall a b : nat, CoPrime a b -> CoPrime b a.
@@ -32,14 +66,14 @@ Proof.
     destruct H0 as [H1 | H1].
     + rewrite H1 in H; simpl in H.
       inversion H. clear H H0 H1 H2.
-      assert (2 | 0). { exists 0. auto. }
+      assert (2 | 0). { exists 0%Z. auto. }
       destruct (H3 _ H H). nia.
     + rewrite H1; now exists 0%nat. 
-  - assert (H1: (S a > 0)%nat) by apply gt_Sn_O.
+  - assert (H1: (S a > 0)%nat) by apply Nat.lt_0_succ.
     pose (gcd_bezout_nat (S a) b 1 H1 H) as W.
     inversion W; clear W; destruct H0 as [x1 H0].
     assert (1 * Z.of_nat c =
-              Z_of_nat (S a) * (u * Z.of_nat c + Z.of_nat x1 * v)).
+              Z_of_nat (S a) * (u * Z.of_nat c + Z.of_nat x1 * v))%Z.
     { rewrite (Z.mul_comm (Z.of_nat (S a))).
       rewrite  Z.mul_add_distr_r.
       rewrite (Z.mul_comm (u * Z.of_nat c)).
@@ -55,7 +89,7 @@ Proof.
       nia. }
     rewrite Zmult_1_l in H3.
     assert (Z.divide (Z.of_nat (S a)) (Z.of_nat c)).
-    { exists (u * Z.of_nat c + Z.of_nat x1 * v).
+    { exists (u * Z.of_nat c + Z.of_nat x1 * v)%Z.
       now rewrite Z.mul_comm at 1. }
     clear H2 H3 u v.
     rewrite <- (Znat.Zabs2Nat.id (S a)).
@@ -67,17 +101,11 @@ Lemma coPrimeMult2 :
   forall a b c : nat,
     CoPrime a b -> divide a c -> divide b c -> divide (a * b) c.
 Proof.
-  intros a b c H H0 [x H1].
-  assert (divide a x).
+  intros a b c H H0 [x H1]; assert (H2: divide a x).
   { eapply coPrimeMult with (1:= H); now rewrite <- H1. }
   destruct H2 as [x0 H2]; exists x0; subst; ring.
 Qed.
 
-Lemma ltgt1: forall a b : nat, (a < b -> b > 0)%nat. 
-Proof. lia. Qed.
-
-Lemma minus1: forall a b c : Z, (a - c)%Z = (b - c)%Z -> a = b.
-Proof. lia. Qed.
 
 Lemma chRem2 : 
   forall b1 r1 b2 r2 q : Z,
@@ -177,8 +205,6 @@ Qed.
 
 
 
-Open Scope nat_scope. 
-
 Lemma uniqueRem :
  forall r1 r2 b : nat,
  b > 0 ->
@@ -198,13 +224,13 @@ Proof.
   intros n H0 .
   destruct (le_lt_dec b n) as [Hle | Hlt].
   - assert (n > n - b).
-    { unfold gt in |- *; apply lt_minus; assumption. }
+    { unfold gt in |- *; apply Nat.sub_lt; assumption. }
     destruct (H0 _ H1) as [[a1 b0] p].
     simpl in p;  exists (S a1, b0); simpl in |- *.
     destruct p as (H2, H3).
     split.
     + rewrite <- Nat.add_assoc, <- H2.
-      now apply le_plus_minus.
+      now rewrite Nat.add_comm, Nat.sub_add. 
     + assumption.
   -  exists (0, n); simpl in |- *; now split.
 Qed.
@@ -247,7 +273,7 @@ Proof.
   + apply H0; assumption.
   + assert (a + Z.of_nat b * - a >= 0)%Z.
     induction b as [| b Hrecb].
-    * elim (lt_irrefl _ H).
+    * elim (Nat.lt_irrefl _ H).
     * rewrite Znat.inj_S.
       rewrite Z.mul_comm.
       rewrite <- Zmult_succ_r_reverse.
@@ -265,7 +291,7 @@ Proof.
       replace 0%Z with (Z.of_nat 0).
       apply Znat.inj_ge.
       unfold ge in |- *.
-      apply le_O_n.
+      apply Nat.le_0_l.
       auto.
       auto.
     * induction (H0 _ H1) as [x [H2 H3]].
@@ -416,12 +442,14 @@ Proof.
   rewrite Nat.mul_comm.
   rewrite (Nat.mul_comm x1).
   induction x2 as [| x2 Hrecx2].
-  elim (lt_n_O _ pb).
-  apply mult_S_lt_compat_l.
+  elim (Nat.nlt_0_r _ pb).
+  rewrite <- (Nat.mul_lt_mono_pos_l (S _)). 
   fold (x1 > 0) in |- *.
   eapply ltgt1.
   apply pa.
   auto.
+  auto with arith. 
+  now simpl. 
   destruct (chRem1 _ H2 d) as [(a1, b1) [H3 H4]].
   exists b1; split.
   apply H3.
@@ -492,7 +520,7 @@ Proof.
   intros ? ? H a b pa pb.
   destruct (le_lt_dec a b).
   - apply chineseRemainderTheoremHelp; assumption.
-  - assert (H0: b <= a) by (now apply lt_le_weak).
+  - assert (H0: b <= a) by (now apply Nat.lt_le_incl).
     assert (H1: CoPrime x2 x1) by (now apply coPrimeSym).
     induction (chineseRemainderTheoremHelp _ _ H1 b a pb pa H0)
                 as [x [H2 [H3 H4]]].
@@ -573,10 +601,10 @@ Lemma prodBig1 :
  (forall z : nat, z < n -> x z > 0) -> prod n x > 0.
 Proof.
   induction n as [| n Hrecn].
-  - intros x H; simpl in |- *; apply gt_Sn_n.
+  - intros x H; simpl in |- *; apply Nat.lt_succ_diag_r.
   - intros x H; simpl in |- *; apply Nat.mul_pos_pos.
-    + apply H; apply lt_n_Sn.
-    + apply Hrecn; intros; now apply H, lt_S.
+    + apply H; apply Nat.lt_succ_diag_r.
+    + apply Hrecn; intros; now apply H, Nat.lt_lt_succ_r.
 Qed.
 
 Lemma sameProd :
@@ -609,17 +637,17 @@ Proof.
     simpl in |- *; apply coPrimeMult3.
   + apply H0.
     apply Nat.lt_lt_succ_r.
-    apply lt_n_Sn.
+    apply Nat.lt_succ_diag_r.
   + apply prodBig1.
     intros; apply H0.
     do 2 apply Nat.lt_lt_succ_r.
     assumption.
   + apply H0.
-    apply lt_n_Sn.
+    apply Nat.lt_succ_diag_r.
   + apply H.
     apply Nat.lt_lt_succ_r.
-    apply lt_n_Sn.
-    apply lt_n_Sn.
+    apply Nat.lt_succ_diag_r.
+    apply Nat.lt_succ_diag_r.
     auto.
   + set
       (A1 :=
@@ -638,20 +666,20 @@ Proof.
           rewrite a0.
           assumption.
         * apply H.
-          apply lt_n_Sn.
+          apply Nat.lt_succ_diag_r.
           apply Nat.lt_lt_succ_r.
           assumption.
           unfold not in |- *; intros.
           rewrite H5 in H3.
-          elim (lt_irrefl _ H3).
+          elim (Nat.lt_irrefl _ H3).
       + induction (eq_nat_dec z2 n).
         * apply H.
           apply Nat.lt_lt_succ_r.
           assumption.
-          apply lt_n_Sn.
+          apply Nat.lt_succ_diag_r.
           unfold not in |- *; intros.
           rewrite H5 in H2.
-          elim (lt_irrefl _ H2).
+          elim (Nat.lt_irrefl _ H2).
         * apply H.
           apply Nat.lt_lt_succ_r.
           assumption.
@@ -662,7 +690,7 @@ Proof.
         unfold A1 in |- *.
         induction (eq_nat_dec z n).
         * apply H0.
-          apply lt_n_Sn.
+          apply Nat.lt_succ_diag_r.
         * apply H0.
           apply Nat.lt_lt_succ_r.
           assumption.
@@ -676,7 +704,7 @@ Proof.
     unfold A1 in |- *.
     induction (eq_nat_dec z n).
    * rewrite a in H3.
-     elim (lt_irrefl _ H3).
+     elim (Nat.lt_irrefl _ H3).
    * reflexivity.
    * unfold A1 in |- *.
      induction (eq_nat_dec n n).
@@ -685,14 +713,15 @@ Proof.
 Qed.
 
 Lemma divProd :
- forall (n : nat) (x : nat -> nat) (i : nat),
- i < n -> divide (x i) (prod n x).
+  forall (n : nat) (x : nat -> nat) (i : nat),
+    i < n -> divide (x i) (prod n x).
 Proof.
   induction n as [| n Hrecn].
-  - intros x i H; destruct (lt_n_O _ H).
-  - intros x i H; destruct (le_lt_or_eq i n).
-     + now apply lt_n_Sm_le.
-     + simpl in |- *.
+  - intros x i H; destruct (Nat.nlt_0_r _ H).
+  - intros x i H.
+    assert (lein: i <= n) by lia;
+      rewrite Nat.lt_eq_cases in lein; destruct lein. 
+    + simpl in |- *.
       rewrite Nat.mul_comm.
       destruct (Hrecn x i H0).
       rewrite H1. exists (x0 * x n). lia.
@@ -714,9 +743,9 @@ Proof.
   - intros; exists 0.
     split.
     + simpl in |- *.
-      apply lt_O_Sn.
+      apply Nat.lt_0_succ.
     + intros.
-      elim (lt_n_O _ pz).
+      elim (Nat.nlt_0_r _ pz).
   - intros.
     assert
       (H0: forall z1 z2 : nat,
@@ -745,7 +774,7 @@ Proof.
         assumption.
     } assert (H5: y n < x n).
     { apply py.
-      apply lt_n_Sn.
+      apply Nat.lt_succ_diag_r.
     }
     induction (chineseRemainderTheorem
                    (prod n x) (x n) H4 x0 (y n) H2 H5).
@@ -755,7 +784,10 @@ Proof.
     rewrite Nat.mul_comm.
     assumption.
     intros.
-    induction (le_lt_or_eq z n).
+    About Nat.lt_eq_cases.
+    assert (lezn : z <= n) by lia.
+    rewrite Nat.lt_eq_cases in lezn. destruct lezn.
+   
     + assert
         (H10: y z =
                 snd (proj1_sig (modulo (x z) (ltgt1 (y z) (x z)
@@ -781,9 +813,9 @@ Proof.
       induction H17 as (x5, H17).
       rewrite H17 in H11.
       rewrite (Nat.mul_comm (x z)) in H11.
-      rewrite mult_assoc in H11.
-      rewrite plus_assoc in H11.
-      rewrite <- mult_plus_distr_r in H11.
+      rewrite Nat.mul_assoc in H11.
+      rewrite Nat.add_assoc in H11.
+      rewrite <- Nat.mul_add_distr_r in H11.
       exists (fst x4 * x5 + fst x2).
       split.
       apply H11.
@@ -802,7 +834,6 @@ Proof.
       exists (fst x2).
       rewrite H9 in p.
       assumption.
-    + now apply lt_n_Sm_le.
 Qed.
 
 Lemma minusS : forall a b : nat, b - a = S b - S a.
@@ -974,19 +1005,19 @@ Proof.
      { eapply div_plus_r.
        apply div_mult_compat_l.
        apply H5.
-       rewrite plus_comm.
+       rewrite Nat.add_comm.
        simpl in |- *.
        apply H4.
      }
      induction H3 as (H3, H7).
-     elim (lt_not_le _ _ H3).
-     destruct H6. destruct x; lia.
+     red in H3; rewrite Nat.lt_nge in H3; apply H3.
+     destruct H6 as [x Hx];destruct x; lia.
    }
    destruct (divdec (S (c * S j)) p).
    assert (H7: divide p (c * (j - i))).
    { rewrite minusS.
      rewrite Nat.mul_comm.
-     rewrite mult_minus_distr_r.
+     rewrite Nat.mul_sub_distr_r.
      rewrite (Nat.mul_comm (S j)).
      rewrite (Nat.mul_comm (S i)).
      rewrite minusS.
@@ -996,8 +1027,8 @@ Proof.
   - elim H5.
     assumption.
   - assert (H9: j - i <= n).
-    { eapply le_trans.
-      apply Minus.le_minus.
+    { eapply Nat.le_trans.
+      apply Nat.le_sub_l.
       assumption.
     }
     elim H5. 
@@ -1007,24 +1038,25 @@ Proof.
     unfold factorial in |- *.
     assert (H10: 1 <= j - i).
     { assert (H10: j = i + (j - i)).
-      apply le_plus_minus.
-      apply lt_le_weak.
-      assumption.
-      rewrite H10 in H0.
-      lia.
+
+      rewrite Nat.add_comm.
+      rewrite  Nat.sub_add. 
+      reflexivity.
+      apply Nat.lt_le_incl; assumption.
+      rewrite H10 in H0; lia.
     }
     replace (j - i) with (S (pred (j - i))).
     apply divProd.
-    rewrite pred_of_minus.
-    apply lt_S_n.
-    apply le_lt_n_Sm.
+    rewrite <- Nat.sub_1_r. 
+    apply Nat.succ_lt_mono. 
+    apply Nat.lt_succ_r.
     replace (S (j - i - 1)) with (1 + (j - i - 1)).
-    rewrite <- le_plus_minus.
+    rewrite Nat.add_comm, Nat.sub_add. 
     assumption.
     assumption.
     auto.
     induction (j - i).
-    elim (le_Sn_n _ H10).
+    elim (Nat.nle_succ_diag_l _ H10).
     rewrite <- pred_Sn.
     reflexivity.
     assumption.
@@ -1040,25 +1072,25 @@ Lemma coPrimeSeq :
     i <> j -> i <= n -> j <= n ->
     CoPrime (coPrimeBeta i c) (coPrimeBeta j c).
 Proof.
-unfold coPrimeBeta in |- *.
-intros ? ? ? ? H H0 H1 H2.
-induction (nat_total_order _ _ H0) as [H3 | H3]. 
-- eapply coPrimeSeqHelp.
-  apply H.
-  assumption.
-  assumption.
-  assumption.
-- apply coPrimeSym.
-  eapply coPrimeSeqHelp.
-  + apply H.
-  + assumption.
-  + assumption.
-  + assumption.
+  unfold coPrimeBeta in |- *.
+  intros ? ? ? ? H H0 H1 H2.
+  rewrite Nat.lt_gt_cases in H0; destruct H0 as [H3 | H3].
+  - eapply coPrimeSeqHelp.
+    apply H.
+    assumption.
+    assumption.
+    assumption.
+  - apply coPrimeSym.
+    eapply coPrimeSeqHelp.
+    + apply H.
+    + assumption.
+    + assumption.
+    + assumption.
 Qed.
 
 Lemma gtBeta : forall z c : nat, coPrimeBeta z c > 0.
 Proof.
-  unfold coPrimeBeta in |- *; intros; apply gt_Sn_O.
+  unfold coPrimeBeta in |- *; intros; apply Nat.lt_0_succ.
 Qed.
 
 Fixpoint maxBeta (n: nat) (x: nat -> nat) :=
@@ -1072,11 +1104,12 @@ Lemma maxBetaLe :
     i < n -> x i <= maxBeta n x.
 Proof.
   simple induction n.
-  - intros x i H; elim (lt_n_O _ H).
-  - intros; simpl in |- *; induction (le_lt_or_eq i n0).
-    + eapply le_trans; [now apply H | apply Nat.le_max_r].
+  - intros x i H; elim (Nat.nlt_0_r _ H).
+  - intros; simpl in |- *.
+    assert (lein: i <= n0) by lia; rewrite Nat.lt_eq_cases in lein;
+      destruct lein.
+    +  eapply Nat.le_trans; [now apply H | apply Nat.le_max_r].
     + rewrite H1; apply Nat.le_max_l.
-    + now apply lt_n_Sm_le.
 Qed.
 
 Theorem divProd2 :
@@ -1084,18 +1117,18 @@ Theorem divProd2 :
  i <= n -> divide (prod i x) (prod n x).
 Proof.
   simple induction n.
-  - intros x i ?; assert (H0: (0 = i)) by (now apply le_n_O_eq).
+  - intros x i ?; assert (H0: (0 = i)).
+    { symmetry; now apply Nat.le_0_r. }
     rewrite H0.
     exists 1. lia.
   - intros n0 H x i H0.
-    induction (le_lt_or_eq i (S n0)).
+    rewrite Nat.lt_eq_cases in H0; destruct H0.
     + simpl in |- *.
-      rewrite Nat.mul_comm. assert (i <= n0) by lia.
+      rewrite Nat.mul_comm. assert (H2: i <= n0) by lia.
       destruct (H x i H2).
-      rewrite H3.
+      rewrite H1.
       exists (x0 * x n0). lia.
-    + rewrite H1; exists 1; lia.
-    + assumption.
+    + rewrite H0; exists 1; lia.
 Qed.
 
 Theorem betaTheorem1 :
@@ -1118,20 +1151,20 @@ Proof.
       + unfold factorial in |- *; apply divProd2.
         apply Nat.le_max_l.
       + unfold c, factorial in |- *.
-        exists 1. rewrite mult_1_r. reflexivity.
+        exists 1. now rewrite Nat.mul_1_r. 
     - assumption.
-    - now apply lt_le_weak.
-    - apply lt_le_weak; assumption.
+    - now apply Nat.lt_le_incl.
+    - apply Nat.lt_le_incl; assumption.
   }
   assert (H0: forall z : nat, z < n -> y z < x z).
   { intros; unfold x, coPrimeBeta in |- *.
-    apply le_lt_n_Sm.
-    induction (mult_O_le c (S z)).
+    apply Nat.lt_succ_r. 
+    induction (mult_O_le c (S z)). (* TODO *)
     - discriminate H1.
-    - apply le_trans with c.
+    - apply Nat.le_trans with c.
       + unfold c in |- *.
-        apply le_trans with (max n (maxBeta n y)).
-        apply le_trans with (maxBeta n y).
+        apply Nat.le_trans with (max n (maxBeta n y)).
+        apply Nat.le_trans with (maxBeta n y).
         apply maxBetaLe.
         assumption.
         apply Nat.le_max_r.
@@ -1139,7 +1172,7 @@ Proof.
         intros.
         induction n0 as [| n0 Hrecn0].
         simpl in |- *.
-        apply le_n_Sn.
+        apply Nat.le_succ_diag_r. 
         induction n0 as [| n0 Hrecn1].
         simpl in |- *.
         apply le_n.
@@ -1147,10 +1180,10 @@ Proof.
         { unfold factorial in |- *.
           apply prodBig1.
           intros.
-          apply gt_Sn_O.
+          apply Nat.lt_0_succ.
         }
         simpl in |- *.
-        apply le_trans with
+        apply Nat.le_trans with
           (1 + (1 + n0 * (factorial n0 + n0 * factorial n0))).
         * simpl in |- *.
           repeat apply le_n_S.
@@ -1164,21 +1197,20 @@ Proof.
              unfold A1 in H2.
              clear H4 A1.
              assert (H4: n0 * factorial n0 < 0).
-             { eapply plus_lt_reg_l.
+             { eapply Nat.add_lt_mono_l. 
                apply H2.
              }
-             elim (lt_n_O _ H4).
-          -- rewrite Nat.mul_comm.
-             assumption.
-        * apply plus_le_compat.
+             elim (Nat.nlt_0_r _ H4).
+          -- rewrite Nat.mul_comm; assumption.
+        * apply Nat.add_le_mono.
+          apply le_plus_trans. (* to do *)
+          apply Nat.lt_succ_r.
+          rewrite <- Nat.succ_lt_mono.
+          auto.           
+          apply Nat.add_le_mono.
           apply le_plus_trans.
-          apply lt_n_Sm_le.
-          apply lt_n_S.
-          assumption.
-          apply plus_le_compat.
-          apply le_plus_trans.
-          apply lt_n_Sm_le.
-          apply lt_n_S.
+          apply Nat.lt_succ_r.
+          rewrite <-  Nat.succ_lt_mono.
           assumption.
           apply le_n.
       + rewrite Nat.mul_comm.
