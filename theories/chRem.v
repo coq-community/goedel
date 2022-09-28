@@ -255,7 +255,7 @@ Proof.
 Qed.
 
 (** Imported by PRRepresentable *)
-Lemma modulo :
+Lemma div_eucl :
  forall b : nat,  b > 0 ->
  forall a : nat, {p : nat * nat | a = fst p * b + snd p /\ b > snd p}.
 Proof.
@@ -288,7 +288,7 @@ Proof.
                          Z.of_nat (snd p) =
                            (fst p * Z.of_nat b + a')%Z}).
   { intros a' H0; set (A := Z.to_nat a') in *.
-    induction (modulo b H A) as [x p].
+    induction (div_eucl b H A) as [x p].
     destruct x as (a0, b0).
     exists ((- Z.of_nat a0)%Z, b0).
     destruct p as (H1, H2).
@@ -380,7 +380,7 @@ Lemma gcd_lincomb_nat_dec :
    Z.of_nat d = (Z.of_nat x * fst a + Z.of_nat y * snd a)%Z}.
 Proof.
    intro x; apply (lt_wf_rec x); intros X IH. intros y d H H0.
-   elim (modulo X H y).
+   elim (div_eucl X H y).
    intro z; elim z.
    intros q r; clear z; simpl in |- *.   
    case r.
@@ -435,8 +435,8 @@ Lemma chineseRemainderTheoremHelp :
       a <= b ->
       {y : nat |
         y < x1 * x2 /\
-          a = snd (proj1_sig (modulo x1 (ltgt1 _ _ pa) y)) /\
-          b = snd (proj1_sig (modulo x2 (ltgt1 _ _ pb) y))}.
+          a = snd (proj1_sig (div_eucl x1 (ltgt1 _ _ pa) y)) /\
+          b = snd (proj1_sig (div_eucl x2 (ltgt1 _ _ pb) y))}.
 Proof.
   intros ? ? H a b pa pb H0. unfold CoPrime in H.
   replace 1%Z with (Z.of_nat 1) in H by auto.
@@ -497,7 +497,7 @@ Proof.
   apply H3.
   cbv beta iota zeta delta [snd fst] in H4, p. 
   split.
-  induction (modulo x1 (ltgt1 a x1 pa) b1).
+  induction (div_eucl x1 (ltgt1 a x1 pa) b1).
   induction x as (a2, b2).
   simpl in |- *.
   induction p0 as (H5, H6).
@@ -523,7 +523,7 @@ Proof.
       rewrite (Z.mul_comm (Z.of_nat x1)) in H4.
       apply H4. }
   lia.
-  induction (modulo x2 (ltgt1 b x2 pb) b1).
+  induction (div_eucl x2 (ltgt1 b x2 pb) b1).
   simpl in |- *.
   induction x as (a2, b2).
   cbv beta iota zeta delta [snd fst] in p0.
@@ -556,8 +556,8 @@ Lemma chineseRemainderTheorem :
  forall (a b : nat) (pa : a < x1) (pb : b < x2),
  {y : nat |
  y < x1 * x2 /\
- a = snd (proj1_sig (modulo x1 (ltgt1 _ _ pa) y)) /\
- b = snd (proj1_sig (modulo x2 (ltgt1 _ _ pb) y))}.
+ a = snd (proj1_sig (div_eucl x1 (ltgt1 _ _ pa) y)) /\
+ b = snd (proj1_sig (div_eucl x2 (ltgt1 _ _ pb) y))}.
 Proof.
   intros ? ? H a b pa pb.
   destruct (le_lt_dec a b).
@@ -752,7 +752,7 @@ Lemma chRem :
  {a : nat |
  a < prod n x /\
  (forall (z : nat) (pz : z < n),
-  y z = snd (proj1_sig (modulo (x z) (ltgt1 _ _ (py z pz)) a)))}. 
+  y z = snd (proj1_sig (div_eucl (x z) (ltgt1 _ _ (py z pz)) a)))}. 
 Proof.
   intro.
   induction n as [| n Hrecn].
@@ -805,14 +805,14 @@ Proof.
    
     + assert
         (H10: y z =
-                snd (proj1_sig (modulo (x z) (ltgt1 (y z) (x z)
+                snd (proj1_sig (div_eucl (x z) (ltgt1 (y z) (x z)
                                                 (H1 z H9)) x0)))
     by apply H3.
-      induction (modulo (x z) (ltgt1 (y z) (x z) (H1 z H9)) x0).
+      induction (div_eucl (x z) (ltgt1 (y z) (x z) (H1 z H9)) x0).
       simpl in H10.
-      induction (modulo (x z) (ltgt1 (y z) (x z) (py z pz)) x1).
+      induction (div_eucl (x z) (ltgt1 (y z) (x z) (py z pz)) x1).
       simpl in |- *; rewrite H10.
-      induction (modulo (prod n x) (ltgt1 x0 (prod n x) H2) x1).
+      induction (div_eucl (prod n x) (ltgt1 x0 (prod n x) H2) x1).
       simpl in H7.
       rewrite H7 in p.
       induction p1 as (H11, H12).
@@ -836,8 +836,8 @@ Proof.
       apply H11.
       assumption.
       exists (fst x3); auto.
-    + induction (modulo (x z) (ltgt1 (y z) (x z) (py z pz)) x1).
-      induction (modulo (x n) (ltgt1 (y n) (x n) H5) x1).
+    + induction (div_eucl (x z) (ltgt1 (y z) (x z) (py z pz)) x1).
+      induction (div_eucl (x n) (ltgt1 (y n) (x n) H5) x1).
       simpl in H8.
       simpl in |- *.
       rewrite H9.
@@ -1143,7 +1143,7 @@ Theorem betaTheorem1 :
  forall z : nat,
  z < n ->
  y z =
-   snd (proj1_sig (modulo (coPrimeBeta z (snd a))
+   snd (proj1_sig (div_eucl (coPrimeBeta z (snd a))
                      (gtBeta z (snd a)) (fst a)))}.
 Proof.
   intros n y.
@@ -1226,9 +1226,9 @@ Proof.
   exists (x0, c).
   intros.
   rewrite (H3 z H1).
-  induction (modulo (x z) (ltgt1 (y z) (x z) (H0 z H1)) x0).
+  induction (div_eucl (x z) (ltgt1 (y z) (x z) (H0 z H1)) x0).
   simpl fst; simpl snd.
-  destruct (modulo (coPrimeBeta z c) (gtBeta z c) x0) as [x2 p0].
+  destruct (div_eucl (coPrimeBeta z c) (gtBeta z c) x0) as [x2 p0].
   simpl in |- *.
   eapply uniqueRem.
   apply gtBeta.

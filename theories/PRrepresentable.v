@@ -27,7 +27,7 @@ Let Representable_ext := Representable_ext NN.
 Definition beta (a z : nat) : nat :=
   snd
     (proj1_sig
-       (modulo (coPrimeBeta z (cPairPi1 a)) (gtBeta z (cPairPi1 a))
+       (div_eucl (coPrimeBeta z (cPairPi1 a)) (gtBeta z (cPairPi1 a))
           (cPairPi2 a))).
 
 Definition betaFormula : Formula :=
@@ -536,7 +536,7 @@ apply natNE.
 unfold not in |- *; intros; elim b.
 unfold beta in |- *.
 induction
- (modulo (coPrimeBeta a0 (cPairPi1 a)) (gtBeta a0 (cPairPi1 a)) (cPairPi2 a)).
+ (div_eucl (coPrimeBeta a0 (cPairPi1 a)) (gtBeta a0 (cPairPi1 a)) (cPairPi2 a)).
 induction x as (a1, b0).
 simpl in p.
 simpl in |- *.
@@ -574,7 +574,7 @@ apply Axm; right; constructor.
 apply impI.
 unfold beta in |- *.
 induction
- (modulo (coPrimeBeta a0 (cPairPi1 a)) (gtBeta a0 (cPairPi1 a)) (cPairPi2 a)).
+ (div_eucl (coPrimeBeta a0 (cPairPi1 a)) (gtBeta a0 (cPairPi1 a)) (cPairPi2 a)).
 induction x as (a1, b).
 simpl in |- *.
 simpl in p.
