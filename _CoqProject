@@ -1,6 +1,5 @@
 -R theories Goedel
 
-theories/chRem.v
 theories/codeSysPrf.v
 theories/fixPoint.v
 theories/goedel1.v
