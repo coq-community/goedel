@@ -63,15 +63,15 @@ Proof.
     + apply Hrecn; intros; now apply H, Nat.lt_lt_succ_r.
 Qed.
 
-Lemma sameProd :
- forall (n : nat) (x1 x2 : nat -> nat),
- (forall z : nat, z < n -> x1 z = x2 z) -> prod n x1 = prod n x2.
+Lemma prodExtensional :
+  forall (n : nat) (x1 x2 : nat -> nat),
+    (forall z : nat, z < n -> x1 z = x2 z) -> prod n x1 = prod n x2.
 Proof.
-induction n as [| n Hrecn].
-- intros; reflexivity. 
-- intros x1 x2 H; simpl in |- *; replace (x1 n) with (x2 n).
-  + f_equal; auto.
-  + rewrite (H n); auto. 
+  induction n as [| n Hrecn].
+  - intros; reflexivity. 
+  - intros x1 x2 H; simpl in |- *; replace (x1 n) with (x2 n).
+    + f_equal; auto.
+    + rewrite (H n); auto. 
 Qed.
 
 Definition factorial (n : nat) : nat := prod n S.
@@ -162,48 +162,38 @@ Proof.
   induction (Zle_or_lt 0 (b1 - b2)) as [H5 | H5].
   induction (Zle_lt_or_eq _ _ H5) as [H6 | H6].
   assert (H7: (1 <= b1 - b2)%Z).
-  { replace 1%Z with (Z.succ 0).
-    apply Zlt_le_succ.
-    assumption.
-    auto.
+  { replace 1%Z with (Z.succ 0) by reflexivity. 
+     now apply Zlt_le_succ.
   }
-  assert (H8:(q <= r2 - r1)%Z).
-  { replace q with (1 * q)%Z.
-    rewrite <- H4.
-    apply Zmult_le_compat_r.
-    assumption.
-    eapply Z.le_trans.
-    apply H.
-    apply Zlt_le_weak.
-    assumption.
-    apply Zmult_1_l.
+  assert (H8: (q <= r2 - r1)%Z).
+  { replace q with (1 * q)%Z by apply Zmult_1_l.
+    - rewrite <- H4.
+       apply Zmult_le_compat_r.
+      + assumption.
+      + eapply Z.le_trans.
+        * apply H.
+        * now apply Zlt_le_weak.
   }
   set (A1 := Zplus_lt_le_compat r2 q (- r1) 0 H2) in *.
-  assert (H9:(r2 - r1 < q)%Z).
-  { replace q with (q + 0)%Z.
-    unfold Zminus in |- *.
-    apply A1.
+  assert (H9: (r2 - r1 < q)%Z).
+  { replace q with (q + 0)%Z by ( now rewrite <- Zplus_0_r_reverse). 
+    unfold Zminus in |- *; apply A1.
     eapply (fun a b : Z => Zplus_le_reg_l a b r1).
     rewrite Zplus_opp_r.
-    rewrite <- Zplus_0_r_reverse.
-    assumption.
-    rewrite <- Zplus_0_r_reverse.
-    reflexivity.
+    now rewrite <- Zplus_0_r_reverse.
   }
-  elim (Zle_not_lt q (r2 - r1)).
+  destruct (Zle_not_lt q (r2 - r1)).
   assumption.
   assumption.
-  rewrite <- H6 in H4.
-  rewrite Z.mul_comm in H4.
+  rewrite <- H6, Z.mul_comm in H4.
   rewrite <- Zmult_0_r_reverse in H4.
   rewrite <- (Zplus_opp_r r2) in H4.
   unfold Zminus in H4.
   apply Z.opp_inj.
-  symmetry  in |- *.
-  eapply Zplus_reg_l.
+  symmetry  in |- *; eapply Zplus_reg_l.
   apply H4.
-  assert (H6:(1 <= b2 - b1)%Z).
-  { replace 1%Z with (Z.succ 0).
+  assert (H6: (1 <= b2 - b1)%Z).
+  { replace 1%Z with (Z.succ 0) by reflexivity.
     apply Zlt_le_succ.
     apply (Zplus_lt_reg_l 0 (b2 - b1) b1).
     rewrite Zplus_minus.
@@ -211,9 +201,7 @@ Proof.
     apply (Zplus_lt_reg_l b1 b2 (- b2)).
     rewrite Zplus_opp_l.
     rewrite Zplus_comm.
-    unfold Zminus in H5.
-    assumption.
-    auto.
+    now unfold Zminus in H5.
   }
   assert (H7: ((b2 - b1) * q)%Z = (r1 - r2)%Z) by
     ( rewrite Z.mul_sub_distr_r ; lia ).
@@ -235,13 +223,13 @@ Proof.
     apply A1.
     eapply (fun a b : Z => Zplus_le_reg_l a b r2).
     rewrite Zplus_opp_r.
-    rewrite <- Zplus_0_r_reverse.
-    assumption.
-    rewrite <- Zplus_0_r_reverse.
-    reflexivity.
+    now rewrite <- Zplus_0_r_reverse.
+    now rewrite <- Zplus_0_r_reverse.
   }
   destruct (Zle_not_lt q (r1 - r2)); assumption.
 Qed.
+
+(** Imported by PRrepresentable *)
 
 Lemma uniqueRem :
  forall r1 r2 b : nat,
@@ -267,11 +255,10 @@ Proof.
     destruct (H0 _ H1) as [[a1 b0] p].
     simpl in p;  exists (S a1, b0); simpl in |- *.
     destruct p as (H2, H3).
-    split.
+    split; [| assumption].
     + rewrite <- Nat.add_assoc, <- H2.
       now rewrite Nat.add_comm, Nat.sub_add. 
-    + assumption.
-  -  exists (0, n); simpl in |- *; now split.
+   -  exists (0, n); simpl in |- *; now split.
 Qed.
 
 
@@ -308,7 +295,7 @@ Proof.
       + auto.
         now rewrite <- Z.ge_le_iff.
   }
-  destruct (Z_ge_lt_dec a 0).
+  destruct (Z_ge_lt_dec a 0) as [g | l].
   + apply H0; assumption.
   + assert (a + Z.of_nat b * - a >= 0)%Z.
     induction b as [| b Hrecb].
@@ -322,27 +309,19 @@ Proof.
       apply Zmult_ge_compat_r.
       rewrite (Zminus_diag_reverse a).
       rewrite <- (Zplus_0_l (- a)).
-      unfold Zminus in |- *.
-      apply Z.le_ge.
+      unfold Zminus in |- *; apply Z.le_ge.
       apply Zplus_le_compat_r.
-      apply Zlt_le_weak.
-      assumption.
-      replace 0%Z with (Z.of_nat 0).
+      now apply Zlt_le_weak.
+      change  0%Z with (Z.of_nat 0).
       apply Znat.inj_ge.
       unfold ge in |- *.
       apply Nat.le_0_l.
       auto.
-      auto.
-    * induction (H0 _ H1) as [x [H2 H3]].
-      induction x as (a0, b1).
-      exists ((a0 - a)%Z, b1).
-      split.
+    * destruct  (H0 _ H1) as [(a0,b1) [H2 H3]].
+      exists ((a0 - a)%Z, b1); split.
       -- simpl in |- *; apply H2.
-      -- cbv beta iota zeta delta [fst snd] in |- *.
-         cbv beta iota zeta delta [fst snd] in H3.
-         rewrite H3.
-         rewrite (Zplus_comm a).
-         rewrite Zplus_assoc.
+      -- cbv beta iota zeta delta [fst snd] in H3 |- *.
+         rewrite H3,  (Zplus_comm a), Zplus_assoc.
          apply Zplus_eq_compat.
          rewrite Zmult_minus_distr_r.
          unfold Zminus in |- *.
@@ -363,13 +342,12 @@ Proof.
   apply Zis_gcd_sym in H. apply Zis_gcd_for_euclid in H. auto.
 Qed.
 
-Lemma euclid_gcd :
- forall (d1 d2 : nat) (x y q r : Z),
+Lemma euclid_gcd (d1 d2 : nat) (x y q r : Z) :
    x = (q * y + r)%Z -> Zis_gcd x y (Z.of_nat d1) ->
    Zis_gcd r y (Z.of_nat d2) -> d1 = d2.
 Proof.
-   intros. pose proof (euclid_gcd1 d1 x y q r H0 H).
-   pose proof (Zis_gcd_unique r y _ _ H2 H1). lia.
+   intros H H0 H1 ; pose proof (euclid_gcd1 d1 x y q r H0 H) as H2.
+   pose proof (Zis_gcd_unique r y _ _ H2 H1); lia.
 Qed.
 
 Lemma gcd_lincomb_nat_dec :
@@ -479,19 +457,18 @@ Proof.
   rewrite Z.opp_involutive.
   reflexivity.
   assert (H2: x1 * x2 > 0).
-  replace 0 with (0 * x2).
-  unfold gt in |- *.
-  rewrite Nat.mul_comm.
-  rewrite (Nat.mul_comm x1).
-  induction x2 as [| x2 Hrecx2].
-  elim (Nat.nlt_0_r _ pb).
-  rewrite <- (Nat.mul_lt_mono_pos_l (S _)). 
-  fold (x1 > 0) in |- *.
-  eapply ltgt1.
-  apply pa.
-  auto.
-  auto with arith. 
-  now simpl. 
+  { change 0 with (0 * x2).
+    unfold gt in |- *; rewrite Nat.mul_comm.
+    rewrite (Nat.mul_comm x1).
+    induction x2 as [| x2 Hrecx2].
+    elim (Nat.nlt_0_r _ pb).
+    rewrite <- (Nat.mul_lt_mono_pos_l (S _)). 
+    fold (x1 > 0) in |- *.
+    eapply ltgt1.
+    apply pa.
+    auto.
+    auto with arith. 
+  }
   destruct (chRem1 _ H2 d) as [(a1, b1) [H3 H4]].
   exists b1; split.
   apply H3.
@@ -715,7 +692,7 @@ Proof.
     replace (x (S n)) with (A1 n).
     replace (prod n x) with (prod n A1).
     assumption.
-    apply sameProd.
+    apply prodExtensional.
     intros.
     unfold A1 in |- *.
     induction (eq_nat_dec z n).
@@ -1157,7 +1134,7 @@ Proof.
       + unfold factorial in |- *; apply divProd2.
         apply Nat.le_max_l.
       + unfold c, factorial in |- *.
-        exists 1. now rewrite Nat.mul_1_r. 
+        exists 1; now rewrite Nat.mul_1_r. 
     - assumption.
     - now apply Nat.lt_le_incl.
     - apply Nat.lt_le_incl; assumption.
@@ -1165,7 +1142,7 @@ Proof.
   assert (H0: forall z : nat, z < n -> y z < x z).
   { intros; unfold x, coPrimeBeta in |- *.
     apply Nat.lt_succ_r. 
-    induction (mult_O_le c (S z)). (* TODO *)
+    induction (mult_O_le c (S z)). 
     - discriminate H1.
     - apply Nat.le_trans with c.
       + unfold c in |- *.
@@ -1219,13 +1196,11 @@ Proof.
           rewrite <-  Nat.succ_lt_mono.
           assumption.
           apply le_n.
-      + rewrite Nat.mul_comm.
-        assumption.
+      + now rewrite Nat.mul_comm.
   }
-  induction (chRem _ _ H _ H0) as [x0 [H2 H3]].
+  destruct (chRem _ _ H _ H0) as [x0 [H2 H3]].
   exists (x0, c).
-  intros.
-  rewrite (H3 z H1).
+  intros z H1; rewrite (H3 z H1).
   induction (div_eucl (x z) (ltgt1 (y z) (x z) (H0 z H1)) x0).
   simpl fst; simpl snd.
   destruct (div_eucl (coPrimeBeta z c) (gtBeta z c) x0) as [x2 p0].
@@ -1233,9 +1208,7 @@ Proof.
   eapply uniqueRem.
   apply gtBeta.
   unfold x in p.
-  exists (fst x1).
-  apply p.
-  exists (fst x2).
-  apply p0.
+  exists (fst x1); apply p.
+  exists (fst x2); apply p0.
 Qed.
 
