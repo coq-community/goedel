@@ -1,5 +1,5 @@
 From Coq Require Import Ensembles.
-From Coq Require Import Lists.List.
+From Coq Require Import List.
 From Coq Require Import Arith.
 From hydras.Ackermann Require Import folProp.
 From hydras.Ackermann Require Import folProof.
@@ -9,11 +9,11 @@ From hydras.Ackermann Require Import subProp.
 From hydras.Ackermann Require Import ListExt.
 From hydras.Ackermann Require Import NNtheory.
 From hydras.Ackermann Require Import NN2PA.
-Require Import fixPoint.
-Require Import codeSysPrf.
+From Goedel Require Import fixPoint.
+From Goedel Require Import codeSysPrf.
 From hydras.Ackermann Require Import PAtheory.
 From hydras.Ackermann Require Import code.
-Require Import PRrepresentable.
+From Goedel Require Import PRrepresentable.
 From hydras.Ackermann Require Import expressible.
 From hydras.Ackermann Require Import checkPrf.
 From hydras.Ackermann Require Import codeNatToTerm.
