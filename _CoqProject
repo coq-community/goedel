@@ -1,4 +1,4 @@
--R theories Goedel
+-Q theories Goedel
 
 theories/codeSysPrf.v
 theories/fixPoint.v

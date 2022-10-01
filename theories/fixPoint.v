@@ -12,9 +12,9 @@ From hydras.Ackermann Require Import folLogic3.
 From hydras.Ackermann Require Import folReplace.
 From hydras.Ackermann Require Import LNN.
 From hydras.Ackermann Require Import codeNatToTerm.
-Require Import PRrepresentable.
+From Goedel Require Import PRrepresentable.
 From hydras.Ackermann Require Import ListExt.
-From Coq Require Import Lists.List.
+From Coq Require Import List.
 From hydras.Ackermann Require Import NN.
 From hydras.Ackermann Require Import expressible.
 

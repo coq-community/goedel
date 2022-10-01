@@ -10,7 +10,7 @@ From hydras.Ackermann Require Import NNtheory.
 From hydras.Ackermann Require Import primRec.
 From Coqprime Require Import ChineseRem.
 From hydras.Ackermann Require Import expressible.
-From Coq Require Import Lists.List.
+From Coq Require Import List.
 From Coq Require Vector.
 From hydras.Ackermann Require Import ListExt.
 From hydras.Ackermann Require Import cPair.

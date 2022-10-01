@@ -1,5 +1,5 @@
 From Coq Require Import Ensembles.
-From Coq Require Import Lists.List.
+From Coq Require Import List.
 From hydras.Ackermann Require Import checkPrf.
 From hydras.Ackermann Require Import code.
 From hydras.Ackermann Require Import Languages.
@@ -7,7 +7,7 @@ From hydras.Ackermann Require Import folProp.
 From hydras.Ackermann Require Import folProof.
 From hydras.Ackermann Require Import folLogic3.
 From hydras.Ackermann Require Import folReplace.
-Require Import PRrepresentable.
+From Goedel Require Import PRrepresentable.
 From hydras.Ackermann Require Import expressible.
 From hydras.Ackermann Require Import primRec.
 From Coq Require Import Arith.
