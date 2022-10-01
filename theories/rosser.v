@@ -134,7 +134,7 @@ intros.
 induction (S (codePrf A a p)).
 right.
 intros.
-elim (lt_n_O _ H0).
+elim (Nat.nlt_0_r _ H0).
 induction IHn as [H0| H0].
 left.
 decompose record H0.
@@ -147,7 +147,7 @@ induction
        (codeFormula b) n) 0).
 right.
 intros.
-induction (le_lt_or_eq _ _ (lt_n_Sm_le _ _ H1)).
+induction (proj1 (Nat.lt_eq_cases _ _) (proj1 (Nat.lt_succ_r _ _) H1)).
 eauto.
 rewrite <- H2 in a0.
 rewrite
@@ -175,7 +175,7 @@ rewrite H3.
 auto.
 right.
 intros.
-induction (le_lt_or_eq _ _ (lt_n_Sm_le _ _ H5)).
+induction (proj1 (Nat.lt_eq_cases _ _) (proj1 (Nat.lt_succ_r _ _) H5)).
 rewrite <- H1 in H0.
 eauto.
 assert (B = x0).
@@ -229,10 +229,10 @@ reflexivity.
 destruct n.
 apply H7.
 reflexivity.
-apply (le_not_lt (S (S n)) 1).
+apply (Nat.le_ngt (S (S n)) 1).
 assumption.
-apply lt_n_S.
-apply lt_O_Sn.
+apply (proj1 (Nat.succ_lt_mono _ _)).
+apply Nat.lt_0_succ.
 assert (v <= 1).
 apply freeVarCodeSysPrfN.
 assumption.
@@ -242,10 +242,10 @@ reflexivity.
 destruct n.
 apply H7.
 reflexivity.
-apply (le_not_lt (S (S n)) 1).
+apply (Nat.le_ngt (S (S n)) 1).
 assumption.
-apply lt_n_S.
-apply lt_O_Sn.
+apply (proj1 (Nat.succ_lt_mono _ _)).
+apply Nat.lt_0_succ.
 intros.
 induction H as [H| H].
 unfold Inconsistent in |- *.
@@ -441,15 +441,15 @@ set
                   (natToTerm n1))) rec) n0 (F n0)
      end) n) in *.
 SimplFreeVar.
-apply (le_not_lt x2 1).
+apply (Nat.le_ngt x2 1).
 apply freeVarCodeSysPrfN.
 assumption.
 destruct x2 as [| n0].
 elim H6; reflexivity.
 destruct n0.
 elim H5; reflexivity.
-apply lt_n_S.
-apply lt_O_Sn.
+apply (proj1 (Nat.succ_lt_mono _ _)).
+apply Nat.lt_0_succ.
 apply (IHn x2 H3).
 apply impE with E.
 apply sysExtend with NN.
@@ -496,15 +496,15 @@ apply (reduceNot LNN).
 apply (subFormulaTrans LNN).
 unfold not in |- *; intros.
 SimplFreeVar.
-apply (le_not_lt 2 1).
+apply (Nat.le_ngt 2 1).
 apply freeVarCodeSysPrfN.
 assumption.
-apply lt_n_Sn.
+apply Nat.lt_succ_diag_r.
 unfold E in |- *.
 clear E H4 H3.
 apply impI.
 induction (codePrf x0 x x1).
-elim (lt_n_O _ H5).
+elim (Nat.nlt_0_r _ H5).
 unfold nat_rec, nat_rect in |- *.
 set
  (Q :=
@@ -570,14 +570,14 @@ rewrite H4.
 intros.
 apply codeSysPrfNCorrect2.
 eapply H3.
-apply lt_S.
+apply Nat.lt_lt_succ_r.
 rewrite <- H6.
-apply lt_n_Sn.
+apply Nat.lt_succ_diag_r.
 assumption.
 apply IHn.
 intros.
 eapply H3.
-apply lt_S.
+apply Nat.lt_lt_succ_r.
 apply H4.
 unfold Inconsistent in |- *.
 intros.
@@ -636,7 +636,7 @@ elim H6; reflexivity.
 destruct n0.
 elim H5; reflexivity.
 apply lt_n_S.
-apply lt_O_Sn.
+apply Nat.lt_0_succ.
 apply (IHn _ H3).
 apply impE with E.
 set
@@ -726,7 +726,7 @@ apply impI.
 clear H3.
 clear H4.
 induction (S (codePrf x0 (notH x) x1)).
-elim (lt_n_O _ H5).
+elim (Nat.nlt_0_r _ H5).
 induction (le_lt_or_eq _ _ (lt_n_Sm_le _ _ H5)).
 unfold E in |- *.
 apply
@@ -806,7 +806,7 @@ unfold not in |- *; intros; SimplFreeVar.
 apply (le_not_lt 2 1).
 apply freeVarCodeSysPrfN.
 assumption.
-apply lt_n_Sn.
+apply Nat.lt_succ_diag_r.
 apply Axm; right; constructor.
 unfold LT in |- *.
 rewrite (subFormulaRelation LNN).
@@ -850,11 +850,11 @@ apply codeSysPrfCorrect2.
 rewrite <- H4 in H3.
 apply H3 with x4.
 rewrite <- H6.
-apply lt_n_Sn.
+apply Nat.lt_succ_diag_r.
 apply IHn.
 intros.
 eapply H3.
-apply lt_S.
+apply Nat.lt_lt_succ_r.
 apply H4.
 apply impE with (notH x).
 apply cp2.

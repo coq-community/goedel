@@ -15,7 +15,7 @@ From Coq Require Vector.
 From hydras.Ackermann Require Import ListExt.
 From hydras.Ackermann Require Import cPair.
 From Coq Require Import Decidable.
-Require Import Lia.
+From Coq Require Import Lia.
 
 Section Primative_Recursive_Representable.
 
@@ -58,8 +58,8 @@ assert
   forall a b : nat, (a + b) * S (a + b) + 2 * a = 2 * cPair a b).
 intros.
 unfold cPair in |- *.
-rewrite mult_plus_distr_l.
-rewrite plus_comm.
+rewrite Nat.mul_add_distr_l.
+rewrite Nat.add_comm.
 replace (2 * sumToN (a + b)) with ((a + b) * S (a + b)).
 reflexivity.
 induction (a + b).
@@ -67,19 +67,19 @@ simpl in |- *.
 reflexivity.
 simpl in |- *.
 simpl in IHn.
-rewrite <- plus_Snm_nSm.
+rewrite Nat.add_succ_r.
 simpl in |- *.
-rewrite (plus_comm (sumToN n) 0) in IHn.
+rewrite (Nat.add_comm (sumToN n) 0) in IHn.
 simpl in IHn.
-rewrite (plus_comm (n + sumToN n) 0).
+rewrite (Nat.add_comm (n + sumToN n) 0).
 simpl in |- *.
-rewrite plus_assoc_reverse.
-rewrite (plus_comm (sumToN n)).
-rewrite plus_assoc_reverse.
+rewrite <- Nat.add_assoc.
+rewrite (Nat.add_comm (sumToN n)).
+rewrite <- Nat.add_assoc.
 rewrite <- IHn.
 replace (n * S (S n)) with (n + n * S n).
 reflexivity.
-repeat rewrite (mult_comm n).
+repeat rewrite (Nat.mul_comm n).
 simpl in |- *.
 reflexivity.
 unfold Representable in |- *.
@@ -296,14 +296,14 @@ apply Axm; right; constructor.
 apply sysWeaken.
 apply natNE.
 unfold not in |- *; intros.
-induction (nat_total_order _ _ b).
-elim (lt_not_le (2 * a) (2 * cPair n n0)).
-apply mult_S_lt_compat_l.
+induction (proj1 (Nat.lt_gt_cases _ _) b).
+elim (proj1 (Nat.lt_nge (2 * a) (2 * cPair n n0))).
+apply (proj1 (Nat.mul_lt_mono_pos_l (S _) _ _ (Nat.lt_0_succ _))).
 auto.
 rewrite H4.
 apply le_n.
-elim (lt_not_le (2 * cPair n n0) (2 * a)).
-apply mult_S_lt_compat_l.
+elim (proj1 (Nat.lt_nge (2 * cPair n n0) (2 * a))).
+apply (proj1 (Nat.mul_lt_mono_pos_l (S _) _ _ (Nat.lt_0_succ _))).
 auto.
 rewrite H4.
 apply le_n.
@@ -542,10 +542,10 @@ simpl in p.
 simpl in |- *.
 induction p as (H4, H5).
 unfold coPrimeBeta in H4.
-rewrite plus_comm in H3.
+rewrite Nat.add_comm in H3.
 eapply uniqueRem.
 unfold gt in |- *.
-apply lt_O_Sn.
+apply Nat.lt_0_succ.
 exists n0.
 split.
 symmetry  in |- *.
@@ -589,8 +589,8 @@ rewrite subTermNil.
 replace (apply LNN Languages.Succ (Tcons LNN 0 (natToTerm a) (Tnil LNN)))
  with (natToTerm (S a)).
 apply natLT.
-apply le_lt_n_Sm.
-apply le_trans with (cPair (cPairPi1 a) (cPairPi2 a)).
+apply Nat.lt_succ_r.
+apply Nat.le_trans with (cPair (cPairPi1 a) (cPairPi2 a)).
 apply cPairLe1.
 rewrite cPairProjections.
 apply le_n.
@@ -607,8 +607,8 @@ repeat rewrite (subTermNil LNN (natToTerm a)).
 replace (apply LNN Languages.Succ (Tcons LNN 0 (natToTerm a) (Tnil LNN)))
  with (natToTerm (S a)).
 apply natLT.
-apply le_lt_n_Sm.
-apply le_trans with (cPair (cPairPi1 a) (cPairPi2 a)).
+apply Nat.lt_succ_r.
+apply Nat.le_trans with (cPair (cPairPi1 a) (cPairPi2 a)).
 apply cPairLe2.
 rewrite cPairProjections.
 apply le_n.
@@ -808,18 +808,18 @@ replace
  with (natToTerm (S (cPairPi2 a))).
 apply natLT.
 rewrite H1.
-apply le_lt_n_Sm.
-apply le_trans with (a1 * coPrimeBeta a0 (cPairPi1 a)).
+apply Nat.lt_succ_r.
+apply Nat.le_trans with (a1 * coPrimeBeta a0 (cPairPi1 a)).
 unfold  coPrimeBeta in |- *.
-apply le_trans with (a1 * 1).
-rewrite mult_comm.
+apply Nat.le_trans with (a1 * 1).
+rewrite Nat.mul_comm.
 simpl in |- *.
-rewrite plus_comm.
+rewrite Nat.add_comm.
 apply le_n.
-apply (fun m n p : nat => mult_le_compat_l p n m).
+apply (fun m n p : nat => Nat.mul_le_mono_l p n m).
 apply le_n_S.
-apply le_O_n.
-apply le_plus_l.
+apply Nat.le_0_l.
+apply Nat.le_add_r.
 reflexivity.
 replace
  (apply LNN Languages.Plus
@@ -841,7 +841,7 @@ replace
     (Times (natToTerm a1)
        (Succ (Times (natToTerm (cPairPi1 a)) (Succ (natToTerm a0)))))).
 apply eqTrans with (natToTerm (a1 *  coPrimeBeta a0 (cPairPi1 a) + b)).
-rewrite plus_comm.
+rewrite Nat.add_comm.
 apply eqSym.
 eapply eqTrans.
 apply eqSym.
@@ -894,7 +894,7 @@ Proof.
 intros.
 induction n as [| n Hrecn].
 simpl in |- *.
-apply le_or_lt.
+apply Nat.le_gt_cases.
 simpl in H.
 simpl in |- *.
 assert (In v (freeVarFormula LNN (addExists m n A))).
@@ -902,9 +902,9 @@ eapply In_list_remove1.
 apply H.
 induction (Hrecn H0).
 left.
-apply lt_n_Sm_le.
-apply lt_n_S.
-induction (le_lt_or_eq _ _ H1).
+apply Nat.lt_succ_r.
+apply (proj1 (Nat.succ_lt_mono _ _)).
+induction ((proj1 (Nat.lt_eq_cases _ _) H1)).
 auto.
 elim (In_list_remove2 _ _ _ _ _ H).
 auto.
@@ -963,12 +963,12 @@ induction (eq_nat_dec (n + m) v).
 rewrite <- a in H.
 simpl in H.
 induction H as [H| H].
-elim (le_Sn_n _ H).
+elim (Nat.nle_succ_diag_l _ H).
 elim (lt_not_le _ _ H).
 apply le_plus_r.
 induction (In_dec eq_nat_dec (n + m) (freeVarTerm LNN s)).
 induction (H0 _ a).
-elim (le_Sn_n _ H1).
+elim (Nat.nle_succ_diag_l _ H1).
 elim (lt_not_le _ _ H1).
 apply le_plus_r.
 rewrite Hrecn.
@@ -1013,7 +1013,7 @@ Proof.
 intros.
 induction n as [| n Hrecn].
 simpl in |- *.
-apply le_or_lt.
+apply Nat.le_gt_cases.
 simpl in H.
 simpl in |- *.
 assert (In v (freeVarFormula LNN (addForalls m n A))).
@@ -1021,9 +1021,9 @@ eapply In_list_remove1.
 apply H.
 induction (Hrecn H0).
 left.
-apply lt_n_Sm_le.
-apply lt_n_S.
-induction (le_lt_or_eq _ _ H1).
+apply Nat.lt_succ_r.
+apply (proj1 (Nat.succ_lt_mono _ _)).
+induction ((proj1 (Nat.lt_eq_cases _ _) H1)).
 auto.
 elim (In_list_remove2 _ _ _ _ _ H).
 auto.
@@ -1062,12 +1062,12 @@ induction (eq_nat_dec (n + m) v).
 rewrite <- a in H.
 simpl in H.
 induction H as [H| H].
-elim (le_Sn_n _ H).
+elim (Nat.nle_succ_diag_l _ H).
 elim (lt_not_le _ _ H).
 apply le_plus_r.
 induction (In_dec eq_nat_dec (n + m) (freeVarTerm LNN s)).
 induction (H0 _ a).
-elim (le_Sn_n _ H1).
+elim (Nat.nle_succ_diag_l _ H1).
 elim (lt_not_le _ _ H1).
 apply le_plus_r.
 rewrite Hrecn.
@@ -1159,7 +1159,7 @@ Proof.
 intros.
   - simpl in H ; decompose sum H.
     + rewrite <- H0.
-      apply le_O_n.
+      apply Nat.le_0_l.
     + rewrite <- H1.
       apply lt_n_Sm_le.
       apply lt_n_S.
@@ -1696,7 +1696,7 @@ rewrite (subTermVar2 LNN).
 reflexivity.
 unfold not in |- *; intros; elim b.
 apply plus_reg_l with w.
-repeat rewrite (plus_comm w).
+repeat rewrite (Nat.add_comm w).
 apply H7.
 left.
 rewrite <- plus_Snm_nSm.
@@ -1728,7 +1728,7 @@ assert
 unfold composeSigmaFormula in Hrecn.
 simpl in Hrecn.
 apply Hrecn.
-eapply le_trans.
+eapply Nat.le_trans.
 apply le_n_Sn.
 auto.
 clear B g H2.
@@ -1806,7 +1806,7 @@ unfold not in |- *; intros.
 induction H0 as [H0| H0].
 rewrite <- H0 in H.
 elim (le_not_lt _ _ H).
-apply le_lt_n_Sm.
+apply Nat.lt_succ_r.
 apply le_plus_r.
 apply H0.
 apply iffSym.
@@ -1820,11 +1820,11 @@ elim H5.
 induction H7 as [H5| H5].
 rewrite <- H5 in H.
 elim (le_not_lt _ _ H).
-apply le_lt_n_Sm.
+apply Nat.lt_succ_r.
 apply le_plus_r.
 apply H5.
 right.
-apply le_lt_n_Sm.
+apply Nat.lt_succ_r.
 auto.
 intros.
 elim (closedNatToTerm _ _ H4).
@@ -1866,9 +1866,9 @@ induction A as [| a n0 A HrecA].
 simpl in H6.
 decompose sum H6.
 rewrite <- H1.
-apply le_O_n.
+apply Nat.le_0_l.
 rewrite <- H3.
-apply le_O_n.
+apply Nat.le_0_l.
 simpl in H6.
 induction (in_app_or _ _ _ H6).
 simpl in H2.
@@ -1882,7 +1882,7 @@ rewrite <- H4 in H7.
 induction H7 as [H5| H5].
 rewrite <- plus_Snm_nSm in H5.
 simpl in H5.
-elim (le_Sn_n _ H5).
+elim (Nat.nle_succ_diag_l _ H5).
 elim (lt_not_le _ _ H5).
 apply le_n_S.
 apply le_plus_r.
@@ -1893,7 +1893,7 @@ tauto.
 induction H7 as [H3| H3].
 left.
 simpl in H3.
-eapply le_trans.
+eapply Nat.le_trans.
 apply le_n_Sn.
 apply H3.
 auto.
@@ -1901,7 +1901,7 @@ decompose record (freeVarSubAllFormula1 _ _ _ _ H6).
 destruct x as [| n0].
 induction H9 as [H7| H7].
 rewrite <- H7.
-apply le_O_n.
+apply Nat.le_0_l.
 elim H7.
 induction H9 as [H7| H7].
 rewrite <- H7.
@@ -1915,11 +1915,11 @@ rewrite <- plus_Snm_nSm in H11.
 simpl in H11.
 elim (le_not_lt m n0).
 apply (fun p n m : nat => plus_le_reg_l n m p) with w.
-repeat rewrite (plus_comm w).
+repeat rewrite (Nat.add_comm w).
 apply le_S_n.
 auto.
 apply lt_S_n.
-apply le_lt_n_Sm.
+apply Nat.lt_succ_r.
 auto.
 rewrite <- H7 in H11.
 elim (lt_not_le _ _ H11).
@@ -6581,7 +6581,7 @@ unfold primRecSigmaFormula, minimize, existH, andH, forallH, impH, notH in H4;
   | H:(In _ (freeVarFormula LNN (primRecPiFormulaHelp _ _ _))) |- _ =>
       decompose sum (freeVarPrimRecPiFormulaHelp1 _ _ _ _ H); clear H
   | H:(In ?X3 (freeVarFormula LNN A)) |- _ =>
-      apply le_trans with n; [ apply H0; apply H | apply le_n_Sn ]
+      apply Nat.le_trans with n; [ apply H0; apply H | apply le_n_Sn ]
   | H:(In ?X3 (freeVarFormula LNN B)) |- _ =>
       apply H6; [ clear H | apply H1; apply H ]
   | H:(In _ (_ ++ _)) |- _ =>
@@ -6603,7 +6603,7 @@ unfold primRecSigmaFormula, minimize, existH, andH, forallH, impH, notH in H4;
   end; try first [ assumption | apply le_n ].
 assert (v <= 2); auto.
 destruct v as [| n0].
-apply le_O_n.
+apply Nat.le_0_l.
 destruct n0.
 elim H9; reflexivity.
 destruct n0.
